@@ -1,0 +1,31 @@
+[role="menu"] {
+    background-color: $outsmart-dark;
+    width: $menu-width-sm;
+    position: absolute;
+    top: 2em;
+    right: 0;
+    min-height:100%;
+    // padding-top: 3em;
+
+    header {
+        overflow:hidden;
+        background-color: $outsmart-light;
+        text-align: center;
+    }
+
+    section {
+        padding:1em;
+    }
+
+    // border-left:2px solid $outsmart-light; 
+}
+@media only screen and (min-width: $md-brkp) {
+    [role="menu"] {
+        width: $menu-width-md;        
+    }
+}
+@media only screen and (min-width: $lg-brkp) {
+    [role="menu"] {
+        width: $menu-width-lg;        
+    }
+}

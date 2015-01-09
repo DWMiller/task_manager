@@ -1,0 +1,30 @@
+@import 'vendors/normalize';
+@import 'vendors/flat-colors';
+
+@import 'utils/functions';
+@import 'utils/variables';
+
+@import 'globals/z-index';
+
+@import 'globals/all';
+@import 'globals/smallSize';
+@import 'globals/mediumSize';
+@import 'globals/largeSize';
+
+/**
+ * Components are style sets dealing with a specific type of element 
+ * that may be used throughout the application
+ */
+
+@import 'components/forms';
+@import 'components/buttons';
+
+
+/**
+ * Modules are style sets dealing with specific sections of the content, 
+ * typically identified by id
+ */
+
+@import 'modules/main';
+@import 'modules/nav';
+@import 'modules/menu';
