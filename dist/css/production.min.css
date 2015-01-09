@@ -326,13 +326,13 @@ td, th {
   z-index: 10; }
 
 html {
-  background: #9B59B6;
+  background: #ECF0F1;
   line-height: 1.5;
   font-size: 16px;
   font-family: Georgia; }
 
 html, body, #main-container {
-  background-color: #9B59B6;
+  background-color: #ECF0F1;
   height: 100%; }
 
 .shadow {
@@ -404,32 +404,11 @@ legend {
     line-height: 20px;
     color: #222; }
   .input-group label {
-    position: absolute;
-    top: 0.7em;
-    left: 1.5em;
     padding: 0 0.5em;
     padding-top: 0.5em;
     line-height: 1;
     letter-spacing: 0.125em;
-    color: #95A5A6;
-    background: #fff;
-    pointer-events: none;
-    -webkit-transform-origin: left center;
-        -ms-transform-origin: left center;
-            transform-origin: left center;
-    -webkit-transform: translateY(0) scale(1);
-        -ms-transform: translateY(0) scale(1);
-            transform: translateY(0) scale(1); }
-  .input-group.data label, .input-group.focus label {
-    -webkit-transform: translate(-16px, -18px) scale(0.9);
-        -ms-transform: translate(-16px, -18px) scale(0.9);
-            transform: translate(-16px, -18px) scale(0.9); }
-  .input-group.data label {
-    color: #95A5A6; }
-  .input-group.focus input {
-    border-color: #3498DB; }
-  .input-group.focus label {
-    color: #3498DB; }
+    pointer-events: none; }
 
 input[type="checkbox"], input[type="rado"] {
   min-height: 22px;
@@ -477,7 +456,7 @@ input[type="text"], input[type="password"], input[type="email"] {
  */
 [role="main"] {
   overflow: hidden;
-  background-color: #9B59B6;
+  background-color: #ECF0F1;
   min-height: 100%;
   padding-left: 1em;
   padding-right: 1em;
@@ -511,12 +490,14 @@ input[type="text"], input[type="password"], input[type="email"] {
               transform: translateX(-35%); } }
 
 [role="navigation"] {
+  background: black;
+  min-height: 2em;
   width: 100%;
   text-align: right;
   padding: 0 1em; }
 
 [role="menu"] {
-  background-color: #87999a;
+  background-color: #c8cccc;
   width: 75%;
   position: absolute;
   top: 2em;
@@ -524,7 +505,7 @@ input[type="text"], input[type="password"], input[type="email"] {
   min-height: 100%; }
   [role="menu"] header {
     overflow: hidden;
-    background-color: #dae0e0;
+    background-color: #fbfcfc;
     text-align: center; }
   [role="menu"] section {
     padding: 1em; }

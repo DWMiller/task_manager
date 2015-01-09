@@ -31,6 +31,8 @@
 
         <div id="main" role="main">
 
+            <div id="viewer"></div>
+
 
         </div>
         <!-- /main content -->
@@ -42,6 +44,35 @@
             <header>
                 <h2>Menu</h2>
             </header>
+
+            <section>
+                <form id="menu-project">
+                    <fieldset>
+                        <legend>Project Settings</legend>
+
+                        <div class="input-group">
+                            <label for="project-name">Project Name</label>
+                            <input name="project-name" id="project-name" type="text" value="">
+                        </div>
+
+                    </fieldset>
+                </form>
+            </section>
+    
+            <section>
+                <form id="menu-load">
+                    <select name="existing-projects" id="existing-projects"></select>
+                    <!-- <button id="project-open" class="button raised blue">Load Project</button> -->
+                </form>
+                
+            </section>
+
+            <section>
+                <button id="project-create" class="button raised blue">Create New Project</button>
+                
+                <button id="project-import" class="button raised blue"> Import Project</button>
+                <button id="project-export" class="button raised blue">Export Project</button>
+            </section>
         </div>
 
 

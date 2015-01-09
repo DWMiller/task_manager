@@ -20,10 +20,25 @@ CORE.createModule('controller', function(c, config) {
 
     function startup() {
         c.startModule('menu');
+        c.startModule('menu-load');
+        c.startModule('menu-project');
+        c.startModule('loader');
+        c.startModule('saver');
+        c.startModule('viewer');
+
+        c.notify({
+            type: 'state-started',
+            data: true
+        });
     }
 
     function shutdown() {
         c.stopModule('menu');
+        c.stopModule('menu-load');
+        c.stopModule('menu-project');
+        c.stopModule('loader');
+        c.stopModule('saver');
+        c.stopModule('viewer');
     }
 
     function restart() {

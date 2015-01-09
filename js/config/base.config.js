@@ -4,14 +4,13 @@
  * Provided as a location for general config settings if an individual file is not appropriate or not preferred.
  * @type {Object}
  */
-CORE.extendConfig({
-	room: {
-		updateInterval: 3000
+dmf.extendConfig({
+	saver: {
+		'namespace': 'task_manager_',
+		'id-length': 16
 	},
-	game: {
-		updateInterval: 2000
+	loader: {
+		'namespace': 'task_manager_',
 	},	
-	round: {
-		updateInterval: 2000
-	}
+
 });

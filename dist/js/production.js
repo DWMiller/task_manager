@@ -9823,16 +9823,15 @@ dmf.createModule('system-server', function(c, config) {
  * Provided as a location for general config settings if an individual file is not appropriate or not preferred.
  * @type {Object}
  */
-CORE.extendConfig({
-	room: {
-		updateInterval: 3000
+dmf.extendConfig({
+	saver: {
+		'namespace': 'task_manager_',
+		'id-length': 16
 	},
-	game: {
-		updateInterval: 2000
+	loader: {
+		'namespace': 'task_manager_',
 	},	
-	round: {
-		updateInterval: 2000
-	}
+
 });
 CORE.extendConfig({
 	language: {
@@ -9875,10 +9874,25 @@ CORE.createModule('controller', function(c, config) {
 
     function startup() {
         c.startModule('menu');
+        c.startModule('menu-load');
+        c.startModule('menu-project');
+        c.startModule('loader');
+        c.startModule('saver');
+        c.startModule('viewer');
+
+        c.notify({
+            type: 'state-started',
+            data: true
+        });
     }
 
     function shutdown() {
         c.stopModule('menu');
+        c.stopModule('menu-load');
+        c.stopModule('menu-project');
+        c.stopModule('loader');
+        c.stopModule('saver');
+        c.stopModule('viewer');
     }
 
     function restart() {
@@ -9894,7 +9908,144 @@ CORE.createModule('controller', function(c, config) {
 
 });
 
-CORE.createModule('menu', function(c) {
+dmf.createModule('menu-load', function(c) {
+    'use strict';
+
+    var p_properties = {
+        id: 'menu-load',
+        selector: 'menu-load',
+        listeners: {
+            'projects-loaded': populateProjects,
+            'project-saved': populateProjects, // This is fairly intensive, don't do it or do differently
+        }
+    };
+
+    var elements = {};
+
+    /************************************ MODULE INITIALIZATION ************************************/
+
+    function p_initialize(scope) {
+        elements = {
+            // 'project-open': document.getElementById('project-open'),
+            'project-list': document.getElementById('existing-projects')
+        };
+        bindEvents();
+    }
+
+    function p_destroy() {
+        unbindEvents();
+        elements = null;
+    }
+
+    function bindEvents() {
+        c.dom.listen(elements['project-list'], 'change', projectOpen);
+    }
+
+    function unbindEvents() {
+        c.dom.ignore(elements['project-list'], 'change', projectOpen);
+    }
+
+    /************************************ GENERAL FUNCTIONS ************************************/
+
+    function clearList() {
+        c.dom.emptyNode(elements['project-list']);
+    }
+
+
+    function populateProjects() {
+        clearList();
+        for (var project in c.data.allProjects) {
+            addProjectToList(c.data.allProjects[project]);
+        }
+    }
+
+    function addProjectToList(project) {
+        var option = document.createElement("option");
+        option.text = (project.projectName || 'Unnamed Project');//project.projectId;
+        option.value = project.projectId;
+        elements['project-list'].appendChild(option);
+    }
+
+    function projectOpen(event) {
+        var selectedIndex = elements['project-list'].selectedIndex;
+        var projectId = elements['project-list'][selectedIndex].value;
+        c.data.project = c.data.allProjects[projectId];
+
+        c.notify({
+            type: 'project-opened',
+            data: true
+        });
+    }
+
+    return {
+        properties: p_properties,
+        initialize: p_initialize,
+        destroy: p_destroy,
+    };
+
+});
+
+dmf.createModule('menu-project', function(c) {
+    'use strict';
+
+    var p_properties = {
+        id: 'menu-project',
+        selector: 'menu-project',
+        listeners: {
+            'project-opened': projectOpened
+        }
+    };
+
+    var elements = {};
+
+    /************************************ MODULE INITIALIZATION ************************************/
+
+    function p_initialize(scope) {
+        elements = {
+            'project-name': document.getElementById('project-name'),
+        };
+        bindEvents();
+    }
+
+    function p_destroy() {
+        unbindEvents();
+        elements = null;
+    }
+
+    function bindEvents() {
+        c.dom.listen(elements['project-name'], 'blur', nameChange);
+    }
+
+    function unbindEvents() {
+        c.dom.ignore(elements['project-name'], 'blur', nameChange);
+    }
+
+    /******************************* Framework Listeners **********************/
+
+    function projectOpened() {
+        elements['project-name'].value = (c.data.project.projectName || 'Unnamed Project');
+    }
+
+    /************************************ GENERAL FUNCTIONS ************************************/
+
+    function nameChange(event) {
+        c.data.project.projectName = elements['project-name'].value;
+
+        c.notify({
+            type: 'data-changed',
+            data: true
+        });
+    }
+
+    return {
+        properties: p_properties,
+        initialize: p_initialize,
+        destroy: p_destroy,
+    };
+
+});
+
+dmf.createModule('menu', function(c) {
     'use strict';
 
     var p_properties = {
@@ -9911,7 +10062,10 @@ CORE.createModule('menu', function(c) {
         elements = {
             //should not reference elements in different scope, use framework event instead
             'menu-toggle': document.getElementById('menu-toggle'),
-            'main': document.getElementById('main')
+            'main': document.getElementById('main'),            
+            'project-create': document.getElementById('project-create'),
+            'project-import': document.getElementById('project-import'),
+            'project-export': document.getElementById('project-export')
         };
         bindEvents();
     }
@@ -9923,13 +10077,36 @@ CORE.createModule('menu', function(c) {
 
     function bindEvents() {
         c.dom.listen(elements['menu-toggle'], 'click', toggleMenu);
+        c.dom.listen(elements['project-create'], 'click', projectCreate);
+        c.dom.listen(elements['project-import'], 'click', projectImport);
+        c.dom.listen(elements['project-export'], 'click', projectExport);
     }
 
     function unbindEvents() {
         c.dom.ignore(elements['menu-toggle'], 'click', toggleMenu);
+        c.dom.ignore(elements['project-create'], 'click', projectCreate);
+        c.dom.ignore(elements['project-import'], 'click', projectImport);
+        c.dom.ignore(elements['project-export'], 'click', projectExport);
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
+
+
+    function projectCreate() {
+        c.notify({
+            type: 'project-started',
+            data: true
+        });
+    }
+
+    function projectImport() {
+
+    }
+
+    function projectExport() {
+
+    }
+
 
     function toggleMenu() {
         c.dom.toggleClass(elements.main, 'menu-active');
@@ -9943,15 +10120,186 @@ CORE.createModule('menu', function(c) {
 
 });
 
-dmf.fn['input-focus'] = function() {
-    this.parentNode.classList.add('focus');
-}
+CORE.createModule('viewer', function(c) {
+    'use strict';
 
-dmf.fn['input-blur'] = function() {
-    this.parentNode.classList.remove('focus');
-    if (this.value.length > 0) {
-        this.parentNode.classList.add('data');
-    } else {
-        this.parentNode.classList.remove('data');
+    var properties = {
+        id: 'viewer',
+        selector: 'viewer',
+        listeners: {
+            'project-opened': projectOpened
+        }
+    };
+
+    var elements = {};
+
+    /************************************ MODULE INITIALIZATION ************************************/
+
+    function initialize(scope) {
+        elements = {
+            // 'menu-toggle': document.getElementById('menu-toggle'),
+        };
+        bindEvents();
     }
+
+    function destroy() {
+        unbindEvents();
+        elements = null;
+    }
+
+    function bindEvents() {
+        // c.dom.listen(elements['menu-toggle'], 'click', toggleMenu);
+    }
+
+    function unbindEvents() {
+        // c.dom.ignore(elements['menu-toggle'], 'click', toggleMenu);
+    }
+
+    /******************************* Framework Listeners **********************/
+    function projectOpened() {
+        
+    }
+    /************************************ GENERAL FUNCTIONS ************************************/
+
+    return {
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
+    };
+
+});
+
+dmf.createModule('loader', function(c, config) {
+    'use strict';
+
+    var properties = {
+        id: 'loader',
+        listeners: {}
+    };
+
+
+
+    /************************************ MODULE INITIALIZATION ************************************/
+
+    function initialize(scope) {
+        getExistingProjects();
+    }
+
+    function destroy() {}
+
+
+    /************************************ GENERAL FUNCTIONS ************************************/
+
+    function getExistingProjects() {
+        var filenameRegex = new RegExp(config.namespace);
+
+        c.data.allProjects = {};
+
+        for (var i = 0; i < localStorage.length; i++) {
+            var projectId = localStorage.key(i);
+            if (filenameRegex.test(projectId)) {
+                var project = JSON.parse(localStorage.getItem(projectId));
+                c.data.allProjects[projectId] = project;
+            }
+        }
+
+        c.notify({
+            type: 'projects-loaded',
+            data: true
+        });
+    }
+
+    return {
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
+    };
+
+});
+
+dmf.createModule('saver', function(c, config) {
+    'use strict';
+
+    var properties = {
+        id: 'saver',
+        listeners: {
+            'project-started': createNewProject,
+            'data-changed': dataChanged
+        }
+    };
+
+
+    /************************************ MODULE INITIALIZATION ***************/
+
+    function initialize(scope) {}
+
+    function destroy() {}
+
+    /******************************* Framework Listeners **********************/
+
+    function createNewProject() {
+        initializeProject();
+        dataChanged();
+
+        c.notify({
+            type: 'project-opened',
+            data: true
+        });
+    }
+
+    function dataChanged() {
+        c.data.allProjects[c.data.project.projectId] = c.data.project;
+        save();
+
+        c.notify({
+            type: 'project-saved',
+            data: true
+        });
+    }
+
+    /************************************ GENERAL FUNCTIONS *******************/
+
+    function initializeProject() {
+        c.data.project = {
+            activated: false,
+            projectId: config.namespace + dmf.fn.uniqueIndex(config['id-length']),
+            projectName: 'Unnamed Project'
+        };
+    }
+
+    function save() {
+        localStorage.setItem(c.data.project.projectId, JSON.stringify(c.data.project));
+    }
+
+    return {
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
+    };
+
+});
+
+dmf.fn.shuffleArray = function(array) {
+    var tmp, randomIndex, pointer = array.length;
+    if (pointer)
+        while (--pointer) {
+            randomIndex = Math.floor(Math.random() * (pointer + 1));
+            tmp = array[randomIndex];
+            array[randomIndex] = array[pointer];
+            array[pointer] = tmp;
+        }
+    return array;
+};
+
+dmf.fn.uniqueIndex = function(length) {
+    'use strict';
+    var charSet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var charSetSize = charSet.length;
+
+    var id = '';
+    for (var i = 1; i <= length; i++) {
+        var randPos = Math.floor(Math.random() * charSetSize);
+        id += charSet[randPos];
+    }
+    return id;
 }
