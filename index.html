@@ -30,10 +30,28 @@
         </nav>
 
         <div id="main" role="main">
-
-            <div id="viewer"></div>
-
-
+            <div id="node-editor">
+                <header>
+                    <h2>Node Editor</h2>
+                </header>
+                <section id="node-data">
+                    <form>
+                        <fieldset>
+                            <div class="input-group">
+                                <input type="text" id="node-label" value="">
+                            </div>
+                            <div class="input-group">
+                                <textarea id="node-description"></textarea>
+                            </div>
+                        </fieldset>
+                    </form>
+                </section>
+                <section id="node-commands">
+                    <button id="node-createChild" class="button raised blue">Create Child Node</button>
+                    <button id="node-delete" class="button raised red">Delete Node</button>
+                </section>
+            </div>
+            <canvas id="viewer"></canvas>
         </div>
         <!-- /main content -->
 
@@ -58,18 +76,18 @@
                     </fieldset>
                 </form>
             </section>
-    
+
             <section>
                 <form id="menu-load">
-                    <select name="existing-projects" id="existing-projects"></select>
+                    <select name="existing-projects" size="4" id="existing-projects"></select>
                     <!-- <button id="project-open" class="button raised blue">Load Project</button> -->
                 </form>
-                
+
             </section>
 
             <section>
                 <button id="project-create" class="button raised blue">Create New Project</button>
-                
+
                 <button id="project-import" class="button raised blue"> Import Project</button>
                 <button id="project-export" class="button raised blue">Export Project</button>
             </section>

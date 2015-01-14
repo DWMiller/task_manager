@@ -44,11 +44,19 @@ dmf.createModule('saver', function(c, config) {
         c.data.project = {
             activated: false,
             projectId: config.namespace + dmf.fn.uniqueIndex(config['id-length']),
-            projectName: 'Unnamed Project'
+            projectName: 'Unnamed Project',
+            projectTree: new dmf.classes.Tree()
         };
+
+        var rootNode = new dmf.classes.TreeNode(c.data.project.projectTree);
+        rootNode.data.label = c.data.project.projectName;
+        rootNode.data.description = 'No description';
+
+        c.data.project.projectTree.rootNode = rootNode;
     }
 
     function save() {
+        console.log('saved', c.data.project);
         localStorage.setItem(c.data.project.projectId, JSON.stringify(c.data.project));
     }
 

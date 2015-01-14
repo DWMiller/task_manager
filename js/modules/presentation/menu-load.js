@@ -44,6 +44,11 @@ dmf.createModule('menu-load', function(c) {
 
     function populateProjects() {
         clearList();
+
+        var option = document.createElement("option");
+        option.text = 'Select a Project';
+        elements['project-list'].appendChild(option);
+
         for (var project in c.data.allProjects) {
             addProjectToList(c.data.allProjects[project]);
         }
@@ -51,7 +56,7 @@ dmf.createModule('menu-load', function(c) {
 
     function addProjectToList(project) {
         var option = document.createElement("option");
-        option.text = (project.projectName || 'Unnamed Project');//project.projectId;
+        option.text = (project.projectName || 'Unnamed Project'); //project.projectId;
         option.value = project.projectId;
         elements['project-list'].appendChild(option);
     }
@@ -60,6 +65,11 @@ dmf.createModule('menu-load', function(c) {
         var selectedIndex = elements['project-list'].selectedIndex;
         var projectId = elements['project-list'][selectedIndex].value;
         c.data.project = c.data.allProjects[projectId];
+
+        var newTree = new dmf.classes.Tree();
+        var rootNode = new dmf.classes.TreeNode(newTree, c.data.project.projectTree);
+        newTree.rootNode = rootNode;
+        c.data.project.projectTree = newTree;
 
         c.notify({
             type: 'project-opened',

@@ -1,0 +1,11 @@
+#node-editor {
+    @extend .shadow-sm;
+    position: absolute;
+    background: $outsmart-dark;
+    top: 0;
+    left: 0;
+    textarea {
+        min-width: 90%;
+        min-height: 5em;
+    }
+}

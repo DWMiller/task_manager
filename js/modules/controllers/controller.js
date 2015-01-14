@@ -25,6 +25,7 @@ CORE.createModule('controller', function(c, config) {
         c.startModule('loader');
         c.startModule('saver');
         c.startModule('viewer');
+        c.startModule('node-editor');
 
         c.notify({
             type: 'state-started',
@@ -39,6 +40,7 @@ CORE.createModule('controller', function(c, config) {
         c.stopModule('loader');
         c.stopModule('saver');
         c.stopModule('viewer');
+        c.stopModule('node-editor');
     }
 
     function restart() {

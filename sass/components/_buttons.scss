@@ -21,6 +21,13 @@
         }
         color: #fff;
     }
+    &.red {
+        background-color: $flat-alizarin;
+        &:active, &:focus, &:hover {
+            background-color: $flat-pomegranate;
+        }
+        color: #fff;
+    }
     &.raised {
         // transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         // transition-delay: 0.2s;
