@@ -9991,372 +9991,360 @@ Copyright (c) 2010 Dennis Hotson
 
 (function() {
 
-jQuery.fn.springy = function(params) {
-	var graph = this.graph = params.graph || new Springy.Graph();
-	var nodeFont = "16px Open-sans, Verdana, sans-serif";
-	var edgeFont = "8px Verdana, sans-serif";
-	var stiffness = params.stiffness || 400.0;
-	var repulsion = params.repulsion || 400.0;
-	var damping = params.damping || 0.5;
-	var minEnergyThreshold = params.minEnergyThreshold || 0.00001;
-	var nodeSelected = params.nodeSelected || null;
-	var nodeImages = {};
-	var edgeLabelsUpright = true;
-
-	var canvas = this[0];
-	var ctx = canvas.getContext("2d");
-
-	var layout = this.layout = new Springy.Layout.ForceDirected(graph, stiffness, repulsion, damping, minEnergyThreshold);
-
-	// calculate bounding box of graph layout.. with ease-in
-	var currentBB = layout.getBoundingBox();
-	var targetBB = {bottomleft: new Springy.Vector(-2, -2), topright: new Springy.Vector(2, 2)};
-
-	// auto adjusting bounding box
-	Springy.requestAnimationFrame(function adjust() {
-		targetBB = layout.getBoundingBox();
-		// current gets 20% closer to target every iteration
-		currentBB = {
-			bottomleft: currentBB.bottomleft.add( targetBB.bottomleft.subtract(currentBB.bottomleft)
-				.divide(10)),
-			topright: currentBB.topright.add( targetBB.topright.subtract(currentBB.topright)
-				.divide(10))
-		};
-
-		Springy.requestAnimationFrame(adjust);
-	});
-
-	// convert to/from screen coordinates
-	var toScreen = function(p) {
-		var size = currentBB.topright.subtract(currentBB.bottomleft);
-		var sx = p.subtract(currentBB.bottomleft).divide(size.x).x * canvas.width;
-		var sy = p.subtract(currentBB.bottomleft).divide(size.y).y * canvas.height;
-		return new Springy.Vector(sx, sy);
-	};
-
-	var fromScreen = function(s) {
-		var size = currentBB.topright.subtract(currentBB.bottomleft);
-		var px = (s.x / canvas.width) * size.x + currentBB.bottomleft.x;
-		var py = (s.y / canvas.height) * size.y + currentBB.bottomleft.y;
-		return new Springy.Vector(px, py);
-	};
-
-	// half-assed drag and drop
-	var selected = null;
-	var nearest = null;
-	var dragged = null;
-
-	jQuery(canvas).mousedown(function(e) {
-		var pos = jQuery(this).offset();
-		var p = fromScreen({x: e.pageX - pos.left, y: e.pageY - pos.top});
-		selected = nearest = dragged = layout.nearest(p);
-
-		if (selected.node !== null) {
-			dragged.point.m = 10000.0;
-
-			if (nodeSelected) {
-				dragged = null; // no dragging
-				nodeSelected(selected.node);
-			}
-		}
-
-		renderer.start();
-	});
-
-	// Basic double click handler
-	jQuery(canvas).dblclick(function(e) {
-		var pos = jQuery(this).offset();
-		var p = fromScreen({x: e.pageX - pos.left, y: e.pageY - pos.top});
-		selected = layout.nearest(p);
-		node = selected.node;
-		if (node && node.data && node.data.ondoubleclick) {
-			node.data.ondoubleclick();
-		}
-	});
-
-	jQuery(canvas).mousemove(function(e) {
-		var pos = jQuery(this).offset();
-		var p = fromScreen({x: e.pageX - pos.left, y: e.pageY - pos.top});
-		nearest = layout.nearest(p);
-
-		if (dragged !== null && dragged.node !== null) {
-			dragged.point.p.x = p.x;
-			dragged.point.p.y = p.y;
-		}
-
-		renderer.start();
-	});
-
-	jQuery(window).bind('mouseup',function(e) {
-		dragged = null;
-	});
-
-	var getTextWidth = function(node) {
-		var text = (node.data.label !== undefined) ? node.data.label : node.id;
-		if (node._width && node._width[text])
-			return node._width[text];
-
-		ctx.save();
-		ctx.font = (node.data.font !== undefined) ? node.data.font : nodeFont;
-		var width = ctx.measureText(text).width;
-		ctx.restore();
-
-		node._width || (node._width = {});
-		node._width[text] = width;
-
-		return width;
-	};
-
-	var getTextHeight = function(node) {
-		return 16;
-		// In a more modular world, this would actually read the font size, but I think leaving it a constant is sufficient for now.
-		// If you change the font size, I'd adjust this too.
-	};
-
-	var getImageWidth = function(node) {
-		var width = (node.data.image.width !== undefined) ? node.data.image.width : nodeImages[node.data.image.src].object.width;
-		return width;
-	}
-
-	var getImageHeight = function(node) {
-		var height = (node.data.image.height !== undefined) ? node.data.image.height : nodeImages[node.data.image.src].object.height;
-		return height;
-	}
-
-	Springy.Node.prototype.getHeight = function() {
-		var height;
-		if (this.data.image == undefined) {
-			height = getTextHeight(this);
-		} else {
-			if (this.data.image.src in nodeImages && nodeImages[this.data.image.src].loaded) {
-				height = getImageHeight(this);
-			} else {height = 10;}
-		}
-		return height;
-	}
-
-	Springy.Node.prototype.getWidth = function() {
-		var width;
-		if (this.data.image == undefined) {
-			width = getTextWidth(this);
-		} else {
-			if (this.data.image.src in nodeImages && nodeImages[this.data.image.src].loaded) {
-				width = getImageWidth(this);
-			} else {width = 10;}
-		}
-		return width;
-	}
-
-	var renderer = this.renderer = new Springy.Renderer(layout,
-		function clear() {
-			ctx.clearRect(0,0,canvas.width,canvas.height);
-		},
-		function drawEdge(edge, p1, p2) {
-			var x1 = toScreen(p1).x;
-			var y1 = toScreen(p1).y;
-			var x2 = toScreen(p2).x;
-			var y2 = toScreen(p2).y;
-
-			var direction = new Springy.Vector(x2-x1, y2-y1);
-			var normal = direction.normal().normalise();
-
-			var from = graph.getEdges(edge.source, edge.target);
-			var to = graph.getEdges(edge.target, edge.source);
-
-			var total = from.length + to.length;
-
-			// Figure out edge's position in relation to other edges between the same nodes
-			var n = 0;
-			for (var i=0; i<from.length; i++) {
-				if (from[i].id === edge.id) {
-					n = i;
-				}
-			}
-
-			//change default to  10.0 to allow text fit between edges
-			var spacing = 12.0;
-
-			// Figure out how far off center the line should be drawn
-			var offset = normal.multiply(-((total - 1) * spacing)/2.0 + (n * spacing));
-
-			var paddingX = 6;
-			var paddingY = 6;
-
-			var s1 = toScreen(p1).add(offset);
-			var s2 = toScreen(p2).add(offset);
-
-			var boxWidth = edge.target.getWidth() + paddingX;
-			var boxHeight = edge.target.getHeight() + paddingY;
-
-			var intersection = intersect_line_box(s1, s2, {x: x2-boxWidth/2.0, y: y2-boxHeight/2.0}, boxWidth, boxHeight);
-
-			if (!intersection) {
-				intersection = s2;
-			}
-
-			var stroke = (edge.data.color !== undefined) ? edge.data.color : '#000000';
-
-			var arrowWidth;
-			var arrowLength;
-
-			var weight = (edge.data.weight !== undefined) ? edge.data.weight : 1.0;
-
-			ctx.lineWidth = Math.max(weight *  2, 0.1);
-			arrowWidth = 1 + ctx.lineWidth;
-			arrowLength = 8;
-
-			var directional = (edge.data.directional !== undefined) ? edge.data.directional : true;
-
-			// line
-			var lineEnd;
-			if (directional) {
-				lineEnd = intersection.subtract(direction.normalise().multiply(arrowLength * 0.5));
-			} else {
-				lineEnd = s2;
-			}
-
-			ctx.strokeStyle = stroke;
-			ctx.beginPath();
-			ctx.moveTo(s1.x, s1.y);
-			ctx.lineTo(lineEnd.x, lineEnd.y);
-			ctx.stroke();
-
-			// arrow
-			if (directional) {
-				ctx.save();
-				ctx.fillStyle = stroke;
-				ctx.translate(intersection.x, intersection.y);
-				ctx.rotate(Math.atan2(y2 - y1, x2 - x1));
-				ctx.beginPath();
-				ctx.moveTo(-arrowLength, arrowWidth);
-				ctx.lineTo(0, 0);
-				ctx.lineTo(-arrowLength, -arrowWidth);
-				ctx.lineTo(-arrowLength * 0.8, -0);
-				ctx.closePath();
-				ctx.fill();
-				ctx.restore();
-			}
-
-			// label
-			if (edge.data.label !== undefined) {
-				text = edge.data.label
-				ctx.save();
-				ctx.textAlign = "center";
-				ctx.textBaseline = "top";
-				ctx.font = (edge.data.font !== undefined) ? edge.data.font : edgeFont;
-				ctx.fillStyle = stroke;
-				var angle = Math.atan2(s2.y - s1.y, s2.x - s1.x);
-				var displacement = -8;
-				if (edgeLabelsUpright && (angle > Math.PI/2 || angle < -Math.PI/2)) {
-					displacement = 8;
-					angle += Math.PI;
-				}
-				var textPos = s1.add(s2).divide(2).add(normal.multiply(displacement));
-				ctx.translate(textPos.x, textPos.y);
-				ctx.rotate(angle);
-				ctx.fillText(text, 0,-2);
-				ctx.restore();
-			}
-
-		},
-		function drawNode(node, p) {
-			var s = toScreen(p);
-
-			ctx.save();
-
-			// Pulled out the padding aspect sso that the size functions could be used in multiple places
-			// These should probably be settable by the user (and scoped higher) but this suffices for now
-			var paddingX = 12;
-			var paddingY = 12;
-
-			var contentWidth = node.getWidth();
-			var contentHeight = node.getHeight();
-			var boxWidth = contentWidth + paddingX;
-			var boxHeight = contentHeight + paddingY;
-
-			// clear background
-			ctx.clearRect(s.x - boxWidth/2, s.y - boxHeight/2, boxWidth, boxHeight);
-
-			// fill background
-			if (selected !== null && selected.node !== null && selected.node.id === node.id) {
-				ctx.fillStyle = "#FFFFE0";
-			} else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
-				ctx.fillStyle = "#EEEEEE";
-			} else {
-				ctx.fillStyle = "#FFFFFF";
-			}
-			ctx.fillRect(s.x - boxWidth/2, s.y - boxHeight/2, boxWidth, boxHeight);
-
-			if (node.data.image == undefined) {
-				ctx.textAlign = "left";
-				ctx.textBaseline = "top";
-				ctx.font = (node.data.font !== undefined) ? node.data.font : nodeFont;
-				ctx.fillStyle = (node.data.color !== undefined) ? node.data.color : "#000000";
-				var text = (node.data.label !== undefined) ? node.data.label : node.id;
-				ctx.fillText(text, s.x - contentWidth/2, s.y - contentHeight/2);
-			} else {
-				// Currently we just ignore any labels if the image object is set. One might want to extend this logic to allow for both, or other composite nodes.
-				var src = node.data.image.src;  // There should probably be a sanity check here too, but un-src-ed images aren't exaclty a disaster.
-				if (src in nodeImages) {
-					if (nodeImages[src].loaded) {
-						// Our image is loaded, so it's safe to draw
-						ctx.drawImage(nodeImages[src].object, s.x - contentWidth/2, s.y - contentHeight/2, contentWidth, contentHeight);
-					}
-				}else{
-					// First time seeing an image with this src address, so add it to our set of image objects
-					// Note: we index images by their src to avoid making too many duplicates
-					nodeImages[src] = {};
-					var img = new Image();
-					nodeImages[src].object = img;
-					img.addEventListener("load", function () {
-						// HTMLImageElement objects are very finicky about being used before they are loaded, so we set a flag when it is done
-						nodeImages[src].loaded = true;
-					});
-					img.src = src;
-				}
-			}
-			ctx.restore();
-		}
-	);
-
-	renderer.start();
-
-	// helpers for figuring out where to draw arrows
-	function intersect_line_line(p1, p2, p3, p4) {
-		var denom = ((p4.y - p3.y)*(p2.x - p1.x) - (p4.x - p3.x)*(p2.y - p1.y));
-
-		// lines are parallel
-		if (denom === 0) {
-			return false;
-		}
-
-		var ua = ((p4.x - p3.x)*(p1.y - p3.y) - (p4.y - p3.y)*(p1.x - p3.x)) / denom;
-		var ub = ((p2.x - p1.x)*(p1.y - p3.y) - (p2.y - p1.y)*(p1.x - p3.x)) / denom;
-
-		if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
-			return false;
-		}
-
-		return new Springy.Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
-	}
-
-	function intersect_line_box(p1, p2, p3, w, h) {
-		var tl = {x: p3.x, y: p3.y};
-		var tr = {x: p3.x + w, y: p3.y};
-		var bl = {x: p3.x, y: p3.y + h};
-		var br = {x: p3.x + w, y: p3.y + h};
-
-		var result;
-		if (result = intersect_line_line(p1, p2, tl, tr)) { return result; } // top
-		if (result = intersect_line_line(p1, p2, tr, br)) { return result; } // right
-		if (result = intersect_line_line(p1, p2, br, bl)) { return result; } // bottom
-		if (result = intersect_line_line(p1, p2, bl, tl)) { return result; } // left
-
-		return false;
-	}
-
-	return this;
-}
+    jQuery.fn.springy = function(params) {
+        var graph = this.graph = params.graph || new Springy.Graph();
+        var stiffness = params.stiffness || 600.0;
+        var repulsion = params.repulsion || 400.0;
+        var damping = params.damping || 0.5;
+        var minEnergyThreshold = params.minEnergyThreshold || 0.00001;
+        var nodeSelected = params.nodeSelected || null;
+
+        var settings = {
+            font: {
+                size: 16,
+                face: "Open-sans, Verdana, sans-serif"
+            },
+            colours: {
+                font: "#FFFFFF",
+                emptyNode: "#E6E9F7",
+                selectedNode: "#FFFFE0",
+                brokenNode: "#FFFFFF",
+                edge: '#000000',
+                nodes: {
+                    incomplete: {
+                        default: '#2980b9',
+                        selected: '#3498db',
+                    },
+                    complete: {
+                        default: '#27ae60',
+                        selected: '#2ecc71',
+                    }
+                }
+            }
+        };
+        var canvas = this[0];
+        var ctx = canvas.getContext("2d");
+
+        var layout = this.layout = new Springy.Layout.ForceDirected(graph, stiffness, repulsion, damping, minEnergyThreshold);
+
+        // calculate bounding box of graph layout.. with ease-in
+        var currentBB = layout.getBoundingBox();
+        var targetBB = {
+            bottomleft: new Springy.Vector(-2, -2),
+            topright: new Springy.Vector(2, 2)
+        };
+
+        // auto adjusting bounding box
+        Springy.requestAnimationFrame(function adjust() {
+            targetBB = layout.getBoundingBox();
+            // current gets 20% closer to target every iteration
+            currentBB = {
+                bottomleft: currentBB.bottomleft.add(targetBB.bottomleft.subtract(currentBB.bottomleft)
+                    .divide(10)),
+                topright: currentBB.topright.add(targetBB.topright.subtract(currentBB.topright)
+                    .divide(10))
+            };
+
+            Springy.requestAnimationFrame(adjust);
+        });
+
+        // convert to/from screen coordinates
+        var toScreen = function(p) {
+            var size = currentBB.topright.subtract(currentBB.bottomleft);
+            var sx = p.subtract(currentBB.bottomleft).divide(size.x).x * canvas.width;
+            var sy = p.subtract(currentBB.bottomleft).divide(size.y).y * canvas.height;
+            return new Springy.Vector(sx, sy);
+        };
+
+        var fromScreen = function(s) {
+            var size = currentBB.topright.subtract(currentBB.bottomleft);
+            var px = (s.x / canvas.width) * size.x + currentBB.bottomleft.x;
+            var py = (s.y / canvas.height) * size.y + currentBB.bottomleft.y;
+            return new Springy.Vector(px, py);
+        };
+
+        // half-assed drag and drop
+        var selected = null;
+        var nearest = null;
+        var dragged = null;
+
+        jQuery(canvas).mousedown(function(e) {
+            var pos = jQuery(this).offset();
+            var p = fromScreen({
+                x: e.pageX - pos.left,
+                y: e.pageY - pos.top
+            });
+            selected = nearest = dragged = layout.nearest(p);
+
+            if (selected.node !== null) {
+                dragged.point.m = 10000.0;
+
+                if (nodeSelected) {
+                    dragged = null; // no dragging
+                    nodeSelected(selected.node);
+                }
+            }
+
+            renderer.start();
+        });
+
+        jQuery(canvas).on('node-selected', function(event, node) {
+            event.preventDefault();
+            console.log(event, node);
+
+            selected = {
+                node: node
+            }
+            nodeSelected(selected.node);
+
+        });
+
+        function changeSelected(node) {
+            console.log(selected);
+        }
+
+        // Basic double click handler
+        jQuery(canvas).dblclick(function(e) {
+            var pos = jQuery(this).offset();
+            var p = fromScreen({
+                x: e.pageX - pos.left,
+                y: e.pageY - pos.top
+            });
+            selected = layout.nearest(p);
+            node = selected.node;
+            if (node && node.data && node.data.ondoubleclick) {
+                node.data.ondoubleclick();
+            }
+        });
+
+        jQuery(canvas).mousemove(function(e) {
+            var pos = jQuery(this).offset();
+            var p = fromScreen({
+                x: e.pageX - pos.left,
+                y: e.pageY - pos.top
+            });
+            nearest = layout.nearest(p);
+
+            if (dragged !== null && dragged.node !== null) {
+                dragged.point.p.x = p.x;
+                dragged.point.p.y = p.y;
+            }
+
+            renderer.start();
+        });
+
+        jQuery(window).bind('mouseup', function(e) {
+            dragged = null;
+        });
+
+        Springy.Node.prototype.getHeight = function() {
+            var node = this;
+            var treeNode = node.data.treeNode;
+            return settings.font.size + ((treeNode.data.importance || 1)*1);
+            // In a more modular world, this would actually read the font size, but I think leaving it a constant is sufficient for now.
+            // If you change the font size, I'd adjust this too.            
+        }
+
+        Springy.Node.prototype.getWidth = function() {
+            var node = this;
+            var text = (node.data.label !== undefined) ? node.data.label : node.id;
+            if (node._width && node._width[text])
+                return node._width[text];
+
+            ctx.save();
+
+            var treeNode = node.data.treeNode;
+            var fontSize = settings.font.size + ((treeNode.data.importance || 1)*1) + "px ";
+
+            ctx.font = fontSize + settings.font.face;
+            var width = ctx.measureText(text).width;
+            ctx.restore();
+
+            node._width || (node._width = {});
+            node._width[text] = width;
+
+            return width;
+        }
+
+        var renderer = this.renderer = new Springy.Renderer(layout,
+            function clear() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            },
+            function drawEdge(edge, p1, p2) {
+                var x1 = toScreen(p1).x;
+                var y1 = toScreen(p1).y;
+                var x2 = toScreen(p2).x;
+                var y2 = toScreen(p2).y;
+
+                var direction = new Springy.Vector(x2 - x1, y2 - y1);
+                var normal = direction.normal().normalise();
+
+                var from = graph.getEdges(edge.source, edge.target);
+                var to = graph.getEdges(edge.target, edge.source);
+
+                var total = from.length + to.length;
+
+                // Figure out edge's position in relation to other edges between the same nodes
+                var n = 0;
+                for (var i = 0; i < from.length; i++) {
+                    if (from[i].id === edge.id) {
+                        n = i;
+                    }
+                }
+
+                //change default to  10.0 to allow text fit between edges
+                var spacing = 12.0;
+
+                // Figure out how far off center the line should be drawn
+                var offset = normal.multiply(-((total - 1) * spacing) / 2.0 + (n * spacing));
+
+                var paddingX = 6;
+                var paddingY = 6;
+
+                var s1 = toScreen(p1).add(offset);
+                var s2 = toScreen(p2).add(offset);
+
+                var boxWidth = edge.target.getWidth() + paddingX;
+                var boxHeight = edge.target.getHeight() + paddingY;
+
+                var intersection = intersect_line_box(s1, s2, {
+                    x: x2 - boxWidth / 2.0,
+                    y: y2 - boxHeight / 2.0
+                }, boxWidth, boxHeight);
+
+                if (!intersection) {
+                    intersection = s2;
+                }
+
+                var stroke = (edge.data.color !== undefined) ? edge.data.color : '#000000';
+
+                var weight = (edge.data.weight !== undefined) ? edge.data.weight : 1.0;
+
+                ctx.lineWidth = Math.max(weight * 2, 0.1);
+
+                // line
+                var lineEnd = s2;
+
+                ctx.strokeStyle = stroke;
+                ctx.beginPath();
+                ctx.moveTo(s1.x, s1.y);
+                ctx.lineTo(lineEnd.x, lineEnd.y);
+                ctx.stroke();
+
+            },
+            function drawNode(node, p) {
+                var treeNode = node.data.treeNode;
+
+                var s = toScreen(p);
+
+                ctx.save();
+
+                // Pulled out the padding aspect sso that the size functions could be used in multiple places
+                // These should probably be settable by the user (and scoped higher) but this suffices for now
+                var paddingX = 12;
+                var paddingY = 12;
+
+                var contentWidth = node.getWidth();
+                var contentHeight = node.getHeight();
+                var boxWidth = contentWidth + paddingX;
+                var boxHeight = contentHeight + paddingY;
+                var fontSize = settings.font.size + ((treeNode.data.importance || 1)*1) + "px ";
+                console.log(fontSize);
+                // clear background
+                ctx.clearRect(s.x - boxWidth / 2, s.y - boxHeight / 2, boxWidth, boxHeight);
+
+
+
+                var isSelected = (selected !== null && selected.node !== null && selected.node.id === node.id);
+
+                var nodeStatus = treeNode.data.status || 'incomplete';
+                var variant = isSelected ? 'selected' : 'default';
+
+                ctx.fillStyle = settings.colours.nodes[nodeStatus][variant];
+
+                boxHeight += ((treeNode.data.importance || 1)*1);
+
+                // fill background
+                if (isSelected) {
+                    boxHeight *= 1.25;
+                    boxWidth *= 1.25;
+                }
+
+                // } else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
+                //     ctx.fillStyle = settings.colours.emptyNode;
+
+                ctx.fillRect(s.x - boxWidth / 2, s.y - boxHeight / 2, boxWidth, boxHeight);
+
+                ctx.textAlign = "left";
+                ctx.textBaseline = "top";
+                ctx.font = fontSize + settings.font.face;
+                ctx.fillStyle = settings.colours.edge;
+                var text = node.data.label;
+
+                ctx.fillText(text, s.x - contentWidth / 2, s.y - contentHeight / 2);
+
+                ctx.restore();
+            }
+        );
+
+        renderer.start();
+
+        // helpers for figuring out where to draw arrows
+        function intersect_line_line(p1, p2, p3, p4) {
+            var denom = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
+
+            // lines are parallel
+            if (denom === 0) {
+                return false;
+            }
+
+            var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
+            var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
+
+            if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+                return false;
+            }
+
+            return new Springy.Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
+        }
+
+        function intersect_line_box(p1, p2, p3, w, h) {
+            var tl = {
+                x: p3.x,
+                y: p3.y
+            };
+            var tr = {
+                x: p3.x + w,
+                y: p3.y
+            };
+            var bl = {
+                x: p3.x,
+                y: p3.y + h
+            };
+            var br = {
+                x: p3.x + w,
+                y: p3.y + h
+            };
+
+            var result;
+            if (result = intersect_line_line(p1, p2, tl, tr)) {
+                return result;
+            } // top
+            if (result = intersect_line_line(p1, p2, tr, br)) {
+                return result;
+            } // right
+            if (result = intersect_line_line(p1, p2, br, bl)) {
+                return result;
+            } // bottom
+            if (result = intersect_line_line(p1, p2, bl, tl)) {
+                return result;
+            } // left
+
+            return false;
+        }
+
+        return this;
+    }
 
 })();
 
@@ -10406,25 +10394,18 @@ var dmf = function() {
             }
         },
         extendConfig: function(moduleConfig) {
-            $.extend(true, this.config, moduleConfig);
+            this.extend(this.config, moduleConfig);
         },
         createModule: function(moduleID, creator) {
-            var temp;
             if (typeof moduleID === 'string' && typeof creator === 'function') {
 
-                temp = creator(this);
-                // if (temp.initialize && typeof temp.initialize === 'function' && temp.destroy && typeof temp.destroy === 'function') {
-                temp = null;
                 moduleData[moduleID] = {
                     create: creator,
                     config: this.config[moduleID],
                     instance: null
                 };
-                this.log(1, "Module '" + moduleID + "' Registration : SUCCESS");
-                // } else {
-                //     this.log(2, "Module '" + moduleID + "' Registration : FAILED : instance has no initialize or destroy functions");
-                // }
 
+                this.log(1, "Module '" + moduleID + "' Registration : SUCCESS");
             } else {
                 this.log(2, "Module '" + moduleID + "' Registration : FAILED : one or more arguments are of incorrect type");
             }
@@ -10450,11 +10431,18 @@ var dmf = function() {
 
                 if (mod.instance.properties.listeners) {
                     this.registerEvents(mod.instance.properties.listeners, moduleID);
-                    console.log("Events Registered - " + moduleID)
                 }
 
                 this.log(1, "Start Module '" + moduleID + "': SUCCESS");
             }
+        },
+        /**
+         * Starts multiple modules
+         * @param  {String[]} modules An array of the module ids to start
+         * @return {[type]}         [description]
+         */
+        startModules: function(modules) {
+            modules.forEach(this.startModule, this);
         },
         startAllModules: function() {
             var moduleID;
@@ -10465,32 +10453,31 @@ var dmf = function() {
             }
         },
         stopModule: function(moduleID) {
-            var data;
-            if ((data = moduleData[moduleID]) && data.instance) {
+            var data = moduleData[moduleID];
 
-                if (data.instance.properties.listeners) {
-                    console.log("Events Ignored - " + moduleID)
-                    this.removeEvents(Object.keys(data.instance.properties.listeners), moduleID);
-                }
-
-                // Modules do not require a destroy function, use it if exists
-                if (data.instance.destroy && typeof data.instance.destroy === 'function') {
-                    data.instance.destroy();
-                } else {
-                    // define scope/sandbox here if initialization function is not present
-                    if (data.instance.scope) {
-                        data.instance.scope = null;
-                    }
-                    // this.dispose(data.instance);
-                }
-
-                data.instance = null;
-                delete data.instance;
-
-                this.log(1, "Stop Module '" + moduleID + "': SUCCESS");
-            } else {
+            if (!data || !data.instance) {
                 this.log(2, "Stop Module '" + moduleID + "': FAILED : module does not exist or has not been started");
+                return;
             }
+
+
+            if (data.instance.properties.listeners) {
+                this.removeEvents(Object.keys(data.instance.properties.listeners), moduleID);
+            }
+
+            // Modules do not require a destroy function, use it if exists
+            if (data.instance.destroy && typeof data.instance.destroy === 'function') {
+                data.instance.destroy();
+            }
+
+            data.instance = null;
+            delete data.instance;
+
+            this.log(1, "Stop Module '" + moduleID + "': SUCCESS");
+
+        },
+        stopModules: function(modules) {
+            modules.forEach(this.stopModule, this);
         },
         stopAllModules: function() {
             var moduleID;
@@ -10500,44 +10487,45 @@ var dmf = function() {
                 }
             }
         },
-        registerEvents: function(evts, mod) {
-            if (this.is_obj(evts) && mod) {
-                for (var eventKey in evts) {
-                    if (!this.events[eventKey]) {
-                        this.events[eventKey] = {};
-                    }
-                    this.events[eventKey][mod] = evts[eventKey];
+        /**
+         * Binds framework events to a module
+         * @param  {[type]} evts Object containing event/function pairs to bind
+         * @param  {string} mod  [description]
+         * @return {[type]}      [description]
+         */
+        registerEvents: function(evts, moduleId) {
+            if (!this.is_obj(evts) || !moduleId) {
+                this.log(1, "Error registering events for: " + moduleId);
+            }
+
+            for (var eventKey in evts) {
+                // Add event to event list if not yet added
+                if (!this.events[eventKey]) {
+                    this.events[eventKey] = {};
                 }
-            } else {
-                this.log(1, "Error registering events for: " + mod);
-            }
-        },
-        notify: function(evt) {
-            if (this.is_obj(evt) && evt.type) {
-                this.triggerEvent(evt);
-            }
-        },
-        //listen & ignore should be here, but moduleID is not available and would need to be passed from the module
-        // listen: function(evts) {
-        //     this.registerEvents(evts, moduleID);
-        // },
-        // ignore: function(evts) {
-        //     if (!this.is_arr(evts)) {
-        //         var e = evts;
-        //         evts = [e];
-        //     }
 
-        // this.removeEvents(evts, moduleID);
-        // },
+                this.events[eventKey][moduleId] = evts[eventKey];
+            }
 
-        triggerEvent: function(evt) {
-            var bindings = this.events[evt.type];
+        },
+        notify: function(event) {
+            // Allows shorthand, trigged via event name only without requiring data
+            if (typeof event === 'string') {
+                event = {
+                    type: event,
+                    data: {}
+                };
+            }
+
+            var bindings = this.events[event.type];
+
             if (!bindings) {
                 return;
             }
 
-            for (var binding in bindings) {
-                bindings[binding](evt.data);
+            var moduleId;
+            for (moduleId in bindings) {
+                bindings[moduleId](event.data);
             }
         },
         /**
@@ -10547,30 +10535,26 @@ var dmf = function() {
          * @return {[type]}      [description]
          */
         removeEvents: function(evts, mod) {
+            // Should be a named function, but mod would not be available
             evts.forEach(function(event, index, array) {
                 delete dmf.events[event][mod];
             });
         },
-        log: function(severity, message) {
-            if (debug) {
 
-                if (!this.is_arr(message)) {
-                    message = [message];
-                }
-
-                for (var i = 0; i < message.length; i++) {
-                    console[(severity === 1) ? 'log' : (severity === 2) ? 'warn' : 'error'](JSON.stringify(message[i], null, 4));
-                };
+        log: function(severity, messages) {
+            if (!debug) {
+                return;
             }
-        },
-        changeLanguage: function(lang) {
-            var event = {
-                type: 'language-change',
-                data: {
-                    language: lang
-                }
+
+            // If message is not an array, make it an array so we can traverse it
+            if (!this.is_arr(messages)) {
+                messages = [messages];
+            }
+
+            for (var i = 0; i < messages.length; i++) {
+                console[(severity === 1) ? 'log' : (severity === 2) ? 'warn' : 'error'](JSON.stringify(messages[i], null, 4));
             };
-            this.triggerEvent(event);
+
         },
         is_arr: function(arr) {
             return jQuery.isArray(arr);
@@ -10579,15 +10563,8 @@ var dmf = function() {
             return jQuery.isPlainObject(obj);
         },
         extend: function(targetObject, extendObject) {
-                jQuery.extend(true, targetObject, extendObject);
-            }
-            // dispose: function(obj) {
-            //     for (var o in obj)
-            //         if (isNaN(parseInt(o))) {
-            //             this.dispose(obj[o]);
-            //         }
-            //     delete obj; 
-            // }
+            jQuery.extend(true, targetObject, extendObject);
+        }
     };
 }()
 
@@ -10663,17 +10640,20 @@ dmf.Sandbox = {
     create: function(core, moduleProperties) {
         var moduleID = moduleProperties.id || null;
         var module_selector = moduleProperties.selector || null
-
+ 
         //Should allow any selector rather than only IDs, but will break existing modules
         var CONTAINER = document.getElementById(module_selector) || core.container;
         return {
             self: function() {
+                core.log(2,'Sandbox:self() deprecated, sandbox being removed');
                 return CONTAINER;
             },
             find: function(selector) {
+                core.log(2,'Sandbox:find() deprecated, sandbox being removed');
                 return core.dom.find(selector, CONTAINER);
-            },
+            },            
             hide: function(element) {
+                core.log(2,'Sandbox:hide() deprecated, sandbox being removed');
                 if (typeof element === 'undefined') {
                     element = CONTAINER;
                 }
@@ -10682,6 +10662,7 @@ dmf.Sandbox = {
                 core.dom.addClass(element, 'hidden');
             },
             show: function(element) {
+                core.log(2,'Sandbox:show() deprecated, sandbox being removed');
                 if (typeof element === 'undefined') {
                     element = CONTAINER;
                 }
@@ -10700,14 +10681,15 @@ dmf.Sandbox = {
  * @type {Object}
  */
 dmf.extendConfig({
-    'system-server': {
-        endpoint: 'http://127.0.0.1:8080/',
-    },
-    'system-localize': {
-        default_language: 'en',
-        path: 'assets/localization/',
-        ext: '.lang.json'
-    }
+	'system-server': {
+		endpoint: 'http://127.0.0.1:8080/',
+		timeout: 7000
+	},	
+	'system-localize': {
+		default_language: 'en',
+		path:'assets/localization/',
+		ext: '.lang.json'		
+	}	
 });
 dmf.createModule('system-controller', function(c) {
     'use strict';
@@ -10718,15 +10700,11 @@ dmf.createModule('system-controller', function(c) {
     };
 
     function initialize(scope) {
-        c.startModule('system-server');
-        c.startModule('system-data');
-        c.startModule('system-localize');
+        c.startModules(['system-server', 'system-data', 'system-localize']);
     }
 
     function destroy() {
-        c.stopModule('system-server');
-        c.stopModule('system-data');
-        c.stopModule('system-localize');
+        c.stopModules(['system-server', 'system-data', 'system-localize']);
     }
 
     return {
@@ -10789,9 +10767,26 @@ dmf.createModule('system-controller', function(c) {
 dmf.createModule('system-localize', function(c, config) {
     'use strict';
 
+        // Usage exampe for other modules 
+        /**
+         * here for testing purposes temporarily
+         * @param  {[type]} lang [description]
+         * @return {[type]}      [description]
+         */
+        // changeLanguage: function(lang) {
+        //     this.notify({
+        //         type: 'language-change',
+        //         data: {
+        //             language: lang
+        //         }
+        //     });
+        // },
+
+
+
     var properties = {
         id: 'system-localize',
-        listeners: {
+        listeners:{
             'language-change': changeLanguage
         }
     };
@@ -10844,13 +10839,6 @@ dmf.createModule('system-localize', function(c, config) {
             language: p_languages[language]
         });
 
-        // c.notify({
-        //     type: 'data-set',
-        //     data: {
-        //         language: p_languages[language]
-        //     }
-        // });
-
         translate();
     }
 
@@ -10869,7 +10857,7 @@ dmf.createModule('system-localize', function(c, config) {
     function localizeElement(element) {
         var key = element.getAttribute("data-localize");
 
-        var text = p_getLocalizedText(key);
+        var text = getLocalizedText(key);
 
         if (text) {
             switch (element.tagName) {
@@ -10932,6 +10920,7 @@ dmf.createModule('system-server', function(c, config) {
 
         var settings = {
             url: config.endpoint,
+            timeout: config.timeout,
             data: JSON.stringify(data),
             type: 'POST',
             dataType: 'json',
@@ -10948,9 +10937,19 @@ dmf.createModule('system-server', function(c, config) {
                         data: result[obj]
                     });
                 }
+
+                c.notify({
+                    type: 'server-response',
+                    data: result
+                });   
             })
-            .fail(function() {
+            .fail(function(fail) {
                 //console.log("error");
+                c.notify({
+                    type: 'server-fail',
+                    data: fail
+                });                
+                
             })
             .always(function(result) {
                 // console.log("complete");
@@ -11100,13 +11099,12 @@ dmf.classes.Tree.prototype.destroyNode = function(node) {
 dmf.classes.Tree.prototype.traverseNode = function(node, callback, parent) {
     callback(node, parent);
 
-    var children = node.children;
-
-    for (var i = 0, len = children.length; i < len; i++) {
-        if (!children[i].hasOwnProperty('traverseNode')) {
-            children[i] = new dmf.classes.TreeNode(this, children[i]);
+    for (var i = 0, len = node.children.length; i < len; i++) {
+        if (!node.children[i].hasOwnProperty('traverseNode')) {
+            // If not a node, create a node 
+            node.children[i] = new dmf.classes.TreeNode(this, node.children[i]);
         }
-        this.traverseNode(children[i], callback, node);
+        this.traverseNode(node.children[i], callback, node);
     }
 }
 
@@ -11114,7 +11112,7 @@ dmf.classes.Tree.prototype.toJSON = function() {
     return this.rootNode.toJSON();
 }
 
-CORE.createModule('controller', function(c, config) {
+dmf.createModule('controller', function(c, config) {
     'use strict';
 
     var p_properties = {
@@ -11135,28 +11133,28 @@ CORE.createModule('controller', function(c, config) {
     }
 
     function startup() {
-        c.startModule('menu');
-        c.startModule('menu-load');
-        c.startModule('menu-project');
-        c.startModule('loader');
-        c.startModule('saver');
-        c.startModule('viewer');
-        c.startModule('node-editor');
+        c.startModules(['menu',
+            'menu-load',
+            'menu-project',
+            'loader',
+            'saver',
+            'viewer',
+            'node-editor'
+        ]);
 
-        c.notify({
-            type: 'state-started',
-            data: true
-        });
+        c.notify('state-started');
     }
 
     function shutdown() {
-        c.stopModule('menu');
-        c.stopModule('menu-load');
-        c.stopModule('menu-project');
-        c.stopModule('loader');
-        c.stopModule('saver');
-        c.stopModule('viewer');
-        c.stopModule('node-editor');
+
+        c.stopModules(['menu',
+            'menu-load',
+            'menu-project',
+            'loader',
+            'saver',
+            'viewer',
+            'node-editor'
+        ]);
     }
 
     function restart() {
@@ -11189,10 +11187,7 @@ dmf.createModule('menu-load', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function p_initialize(scope) {
-        elements = {
-            // 'project-open': document.getElementById('project-open'),
-            'project-list': document.getElementById('existing-projects')
-        };
+        elements['project-list'] = document.getElementById('existing-projects');
         bindEvents();
     }
 
@@ -11245,10 +11240,7 @@ dmf.createModule('menu-load', function(c) {
         newTree.rootNode = rootNode;
         c.data.project.projectTree = newTree;
 
-        c.notify({
-            type: 'project-opened',
-            data: true
-        });
+        c.notify('project-opened');
     }
 
     return {
@@ -11275,9 +11267,7 @@ dmf.createModule('menu-project', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function p_initialize(scope) {
-        elements = {
-            'project-name': document.getElementById('project-name'),
-        };
+        elements['project-name'] = document.getElementById('project-name');        
         bindEvents();
     }
 
@@ -11287,28 +11277,24 @@ dmf.createModule('menu-project', function(c) {
     }
 
     function bindEvents() {
-        c.dom.listen(elements['project-name'], 'blur', nameChange);
+        c.dom.listen(elements['project-name'],'blur', nameChange);
     }
 
     function unbindEvents() {
-        c.dom.ignore(elements['project-name'], 'blur', nameChange);
+        c.dom.listen(elements['project-name'],'blur', nameChange);
     }
 
     /******************************* Framework Listeners **********************/
 
     function projectOpened() {
-        elements['project-name'].value = (c.data.project.projectName || 'Unnamed Project');
+        elements['project-name'].innerHTML = (c.data.project.projectName || 'Unnamed Project');
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
 
     function nameChange(event) {
-        c.data.project.projectName = elements['project-name'].value;
-
-        c.notify({
-            type: 'data-changed',
-            data: true
-        });
+        c.data.project.projectName = elements['project-name'].innerHTML;
+        c.notify('data-changed');
     }
 
     return {
@@ -11328,7 +11314,8 @@ dmf.createModule('menu', function(c) {
         listeners: {}
     };
 
-    var elements = {};
+    var elements = {},
+        menuOpened = false;
 
     /************************************ MODULE INITIALIZATION ************************************/
 
@@ -11336,11 +11323,12 @@ dmf.createModule('menu', function(c) {
         elements = {
             //should not reference elements in different scope, use framework event instead
             'menu-toggle': document.getElementById('menu-toggle'),
-            'main': document.getElementById('main'),            
+            'main': document.getElementById('main'),
             'project-create': document.getElementById('project-create'),
             'project-import': document.getElementById('project-import'),
-            'project-export': document.getElementById('project-export')
+            'project-export': document.getElementById('project-export'),
         };
+
         bindEvents();
     }
 
@@ -11352,38 +11340,74 @@ dmf.createModule('menu', function(c) {
     function bindEvents() {
         c.dom.listen(elements['menu-toggle'], 'click', toggleMenu);
         c.dom.listen(elements['project-create'], 'click', projectCreate);
-        c.dom.listen(elements['project-import'], 'click', projectImport);
+        c.dom.listen(elements['project-import'], 'change', projectImport);
         c.dom.listen(elements['project-export'], 'click', projectExport);
+        c.dom.listen(elements.main, 'click', closeMenu);
     }
 
     function unbindEvents() {
         c.dom.ignore(elements['menu-toggle'], 'click', toggleMenu);
         c.dom.ignore(elements['project-create'], 'click', projectCreate);
-        c.dom.ignore(elements['project-import'], 'click', projectImport);
+        c.dom.ignore(elements['project-import'], 'change', projectImport);
         c.dom.ignore(elements['project-export'], 'click', projectExport);
+        c.dom.ignore(elements.main, 'click', closeMenu);
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
 
 
     function projectCreate() {
-        c.notify({
-            type: 'project-started',
-            data: true
-        });
+        c.notify('project-started');
     }
 
-    function projectImport() {
+    function projectImport(e) {
+        var fileList = e.target.files;
+        var file = fileList[0];
 
+        var reader = new FileReader();
+        reader.onload = function(f) {
+            parseFile(f.target.result);
+        };
+
+        reader.readAsText(file);
+    }
+
+    function parseFile(jsonFile) {
+        var project = JSON.parse(jsonFile);
+        var projectId = project.projectId;
+        localStorage.setItem(projectId, JSON.stringify(project));
+        c.stopModule('loader');
+        c.startModule('loader');
     }
 
     function projectExport() {
-
+        var projectId = c.data.project.projectId;
+        var projectName = c.data.project.projectName;
+        download(projectName + '.json', localStorage.getItem(projectId));
     }
 
-
     function toggleMenu() {
+        if (menuOpened) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    }
+
+    function openMenu() {
         c.dom.toggleClass(elements.main, 'menu-active');
+    }
+
+    function closeMenu() {
+        elements.main.className = '';
+    }
+
+    function download(filename, text) {
+        var pom = document.createElement('a');
+        pom.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(text));
+        pom.setAttribute('download', filename);
+        pom.click();
+        pom.parentNode.removeChild(pom);
     }
 
     return {
@@ -11415,8 +11439,11 @@ dmf.createModule('node-editor', function(c) {
             'node-data': document.getElementById('node-data'),
             'node-commands': document.getElementById('node-commands'),
             'node-createChild': document.getElementById('node-createChild'),
+            'node-delete': document.getElementById('node-delete'),
             'node-label': document.getElementById('node-label'),
             'node-description': document.getElementById('node-description'),
+            'node-status': document.getElementById('node-status'),
+            'node-importance': document.getElementById('node-importance'),
         };
         bindEvents();
     }
@@ -11430,46 +11457,89 @@ dmf.createModule('node-editor', function(c) {
         c.dom.listen(elements['node-createChild'], 'click', createChildNode);
         c.dom.listen(elements['node-label'], 'change', updateNode);
         c.dom.listen(elements['node-description'], 'change', updateNode);
+        c.dom.listen(elements['node-status'], 'change', updateNode);
+        c.dom.listen(elements['node-delete'], 'click', deleteNode);
+        c.dom.listen(elements['node-importance'], 'change', updateNode);
     }
 
     function unbindEvents() {
         c.dom.ignore(elements['node-createChild'], 'click', createChildNode);
         c.dom.ignore(elements['node-label'], 'change', updateNode);
         c.dom.ignore(elements['node-description'], 'change', updateNode);
+        c.dom.ignore(elements['node-status'], 'change', updateNode);
+        c.dom.ignore(elements['node-delete'], 'click', deleteNode);
+        c.dom.ignore(elements['node-importance'], 'change', updateNode);
     }
 
     /******************************* Framework Listeners **********************/
     function nodeSelected(treeNode) {
+        //trigger a save before changing the editor panel content
+        if (selectedNode) {
+            updateNode();
+        }
+
         selectedNode = treeNode;
         updateEditor();
+        elements['node-label'].focus();
+        elements['node-label'].select();
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
 
+    function deleteNode() {
+        var rootNode = c.data.project.projectTree.rootNode;
+        c.data.project.projectTree.traverseNode(rootNode, deleteNodeFromParent, rootNode);
+
+        c.notify({
+            type: 'node-deleted',
+            data: selectedNode
+        });
+
+        c.notify('data-changed');
+    }
+
+    /**
+     * [deleteMatchedChild description]
+     * @return {[type]} [description]
+     */
+    function deleteNodeFromParent(node, parent) {
+        //use indexof?
+        if (node.data === selectedNode.data) {
+            parent.children.forEach(function(n, i) {
+                if (selectedNode.data === n.data) {
+                    parent.children.splice(i, 1);
+                }
+            });
+        }
+    }
+
     function updateNode() {
         selectedNode.data.label = elements['node-label'].value;
         selectedNode.data.description = elements['node-description'].value;
+        selectedNode.data.status = elements['node-status'].value;
+        selectedNode.data.importance = elements['node-importance'].value;
 
         c.notify({
             type: 'node-edited',
             data: selectedNode
         });
 
-        c.notify({
-            type: 'data-changed',
-            data: true
-        });
+        c.notify('data-changed');
     }
 
     function updateEditor() {
         elements['node-label'].value = selectedNode.data.label;
         elements['node-description'].value = selectedNode.data.description;
+        elements['node-status'].value = selectedNode.data.status;
+        elements['node-importance'].value = selectedNode.data.importance || 1;
     }
 
     function createChildNode() {
         var node = new dmf.classes.TreeNode(c.data.project.projectTree);
         node.data.label = 'child of ' + selectedNode.data.label;
         node.data.description = 'No description';
+        node.data.status = 'incomplete';
+        node.data.importance = 1;
 
         selectedNode.addChild(node);
 
@@ -11481,10 +11551,7 @@ dmf.createModule('node-editor', function(c) {
             }
         });
 
-        c.notify({
-            type: 'data-changed',
-            data: true
-        });
+        c.notify('data-changed');
     }
 
     return {
@@ -11495,7 +11562,7 @@ dmf.createModule('node-editor', function(c) {
 
 });
 
-CORE.createModule('viewer', function(c) {
+dmf.createModule('viewer', function(c) {
     'use strict';
 
     var properties = {
@@ -11504,7 +11571,8 @@ CORE.createModule('viewer', function(c) {
         listeners: {
             'project-opened': projectOpened,
             'node-created': nodeCreated,
-            'node-edited': nodeEdited
+            'node-edited': nodeEdited,
+            'node-deleted': nodeDeleted,
         }
     };
 
@@ -11514,9 +11582,7 @@ CORE.createModule('viewer', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function initialize(scope) {
-        elements = {
-            $viewer: $(scope.self())
-        };
+        elements.$viewer = $(scope.self());
 
         scope.self().width = elements.$viewer.parent().width();
         scope.self().height = elements.$viewer.parent().height();
@@ -11547,7 +11613,7 @@ CORE.createModule('viewer', function(c) {
 
         populateGraph();
 
-        var springy = window.springy = $('#viewer').springy({
+        var springy = window.springy = elements.$viewer.springy({
             graph: graph,
             nodeSelected: nodeSelected
         });
@@ -11556,20 +11622,28 @@ CORE.createModule('viewer', function(c) {
 
     function nodeCreated(data) {
         addGraphNode(data.node, data.parent);
+        elements.$viewer.trigger('node-selected', data.node.graphNode);
     }
 
     function nodeEdited(node) {
         node.graphNode.data.label = node.data.label;
         node.graphNode.data.description = node.data.description;
-    }    
+    }
+
+    function nodeDeleted(node) {
+        // console.log('Deleting', node);
+        // for (var i = 0; i < node.children.length; i++) {
+        //     nodeDeleted(node.children[i]);
+        // }
+
+        graph.removeNode(node.graphNode);
+    }
 
     /************************************ GENERAL FUNCTIONS ************************************/
 
     function populateGraph() {
         var rootNode = c.data.project.projectTree.rootNode;
-
         c.data.project.projectTree.traverseNode(rootNode, addGraphNode, rootNode);
-
     }
 
     function addGraphNode(node, parent) {
@@ -11608,8 +11682,6 @@ dmf.createModule('loader', function(c, config) {
         listeners: {}
     };
 
-
-
     /************************************ MODULE INITIALIZATION ************************************/
 
     function initialize(scope) {
@@ -11634,10 +11706,7 @@ dmf.createModule('loader', function(c, config) {
             }
         }
 
-        c.notify({
-            type: 'projects-loaded',
-            data: true
-        });
+        c.notify('projects-loaded');
     }
 
     return {
@@ -11672,20 +11741,14 @@ dmf.createModule('saver', function(c, config) {
         initializeProject();
         dataChanged();
 
-        c.notify({
-            type: 'project-opened',
-            data: true
-        });
+        c.notify('project-opened');
     }
 
     function dataChanged() {
         c.data.allProjects[c.data.project.projectId] = c.data.project;
         save();
 
-        c.notify({
-            type: 'project-saved',
-            data: true
-        });
+        c.notify('project-saved');
     }
 
     /************************************ GENERAL FUNCTIONS *******************/

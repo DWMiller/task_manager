@@ -6,8 +6,6 @@ dmf.createModule('loader', function(c, config) {
         listeners: {}
     };
 
-
-
     /************************************ MODULE INITIALIZATION ************************************/
 
     function initialize(scope) {
@@ -32,10 +30,7 @@ dmf.createModule('loader', function(c, config) {
             }
         }
 
-        c.notify({
-            type: 'projects-loaded',
-            data: true
-        });
+        c.notify('projects-loaded');
     }
 
     return {

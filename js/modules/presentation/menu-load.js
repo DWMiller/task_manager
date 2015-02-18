@@ -15,10 +15,7 @@ dmf.createModule('menu-load', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function p_initialize(scope) {
-        elements = {
-            // 'project-open': document.getElementById('project-open'),
-            'project-list': document.getElementById('existing-projects')
-        };
+        elements['project-list'] = document.getElementById('existing-projects');
         bindEvents();
     }
 
@@ -71,10 +68,7 @@ dmf.createModule('menu-load', function(c) {
         newTree.rootNode = rootNode;
         c.data.project.projectTree = newTree;
 
-        c.notify({
-            type: 'project-opened',
-            data: true
-        });
+        c.notify('project-opened');
     }
 
     return {

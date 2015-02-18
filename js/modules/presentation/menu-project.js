@@ -14,9 +14,7 @@ dmf.createModule('menu-project', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function p_initialize(scope) {
-        elements = {
-            'project-name': document.getElementById('project-name'),
-        };
+        elements['project-name'] = document.getElementById('project-name');        
         bindEvents();
     }
 
@@ -26,28 +24,24 @@ dmf.createModule('menu-project', function(c) {
     }
 
     function bindEvents() {
-        c.dom.listen(elements['project-name'], 'blur', nameChange);
+        c.dom.listen(elements['project-name'],'blur', nameChange);
     }
 
     function unbindEvents() {
-        c.dom.ignore(elements['project-name'], 'blur', nameChange);
+        c.dom.listen(elements['project-name'],'blur', nameChange);
     }
 
     /******************************* Framework Listeners **********************/
 
     function projectOpened() {
-        elements['project-name'].value = (c.data.project.projectName || 'Unnamed Project');
+        elements['project-name'].innerHTML = (c.data.project.projectName || 'Unnamed Project');
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
 
     function nameChange(event) {
-        c.data.project.projectName = elements['project-name'].value;
-
-        c.notify({
-            type: 'data-changed',
-            data: true
-        });
+        c.data.project.projectName = elements['project-name'].innerHTML;
+        c.notify('data-changed');
     }
 
     return {

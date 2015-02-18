@@ -43,6 +43,18 @@
                             <div class="input-group">
                                 <textarea id="node-description"></textarea>
                             </div>
+                            <div class="input-group">
+                                <label for="node-status">Status</label>
+                                <select name="" id="node-status">
+                                    <option>Select Status</option>
+                                    <option value="complete">complete</option>
+                                    <option value="incomplete">incomplete</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="node-status">Importance</label>
+                                <input id="node-importance" type="number" min="1" max="10">
+                            </div>                            
                         </fieldset>
                     </form>
                 </section>
@@ -51,6 +63,8 @@
                     <button id="node-delete" class="button raised red">Delete Node</button>
                 </section>
             </div>
+
+            <h1 id="project-name" contenteditable></h1>
             <canvas id="viewer"></canvas>
         </div>
         <!-- /main content -->
@@ -68,10 +82,10 @@
                     <fieldset>
                         <legend>Project Settings</legend>
 
-                        <div class="input-group">
+                        <!--                         <div class="input-group">
                             <label for="project-name">Project Name</label>
                             <input name="project-name" id="project-name" type="text" value="">
-                        </div>
+                        </div> -->
 
                     </fieldset>
                 </form>
@@ -88,8 +102,11 @@
             <section>
                 <button id="project-create" class="button raised blue">Create New Project</button>
 
-                <button id="project-import" class="button raised blue"> Import Project</button>
                 <button id="project-export" class="button raised blue">Export Project</button>
+
+                <br>
+                <input type="file" id="project-import">
+                <!-- <button id="project-import" class="button raised blue"> Import Project</button> -->
             </section>
         </div>
 
@@ -107,6 +124,19 @@
     };
 
     dmf.activate(settings);
+
+    var tags = document.querySelectorAll('[contenteditable=true][onChange]'); //(requires FF 3.1+, Safari 3.1+, IE8+)
+    for (var i = tags.length - 1; i >= 0; i--)
+        if (typeof(tags[i].onblur) != 'function') {
+            tags[i].onfocus = function() {
+                this.data_orig = this.innerHTML;
+            };
+            tags[i].onblur = function() {
+                if (this.innerHTML != this.data_orig)
+                    this.onchange();
+                delete this.data_orig;
+            };
+        }
     </script>
 </body>
 

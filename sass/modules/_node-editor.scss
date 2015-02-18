@@ -1,8 +1,11 @@
 #node-editor {
     @extend .shadow-sm;
     position: absolute;
-    background: $outsmart-dark;
-    top: 0;
+    background: rgba($outsmart-dark, 0.6);
+    // * {
+    //     opacity: 0.85;
+    // }
+    top: 2em;
     left: 0;
     textarea {
         min-width: 90%;

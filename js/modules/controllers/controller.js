@@ -1,4 +1,4 @@
-CORE.createModule('controller', function(c, config) {
+dmf.createModule('controller', function(c, config) {
     'use strict';
 
     var p_properties = {
@@ -19,28 +19,28 @@ CORE.createModule('controller', function(c, config) {
     }
 
     function startup() {
-        c.startModule('menu');
-        c.startModule('menu-load');
-        c.startModule('menu-project');
-        c.startModule('loader');
-        c.startModule('saver');
-        c.startModule('viewer');
-        c.startModule('node-editor');
+        c.startModules(['menu',
+            'menu-load',
+            'menu-project',
+            'loader',
+            'saver',
+            'viewer',
+            'node-editor'
+        ]);
 
-        c.notify({
-            type: 'state-started',
-            data: true
-        });
+        c.notify('state-started');
     }
 
     function shutdown() {
-        c.stopModule('menu');
-        c.stopModule('menu-load');
-        c.stopModule('menu-project');
-        c.stopModule('loader');
-        c.stopModule('saver');
-        c.stopModule('viewer');
-        c.stopModule('node-editor');
+
+        c.stopModules(['menu',
+            'menu-load',
+            'menu-project',
+            'loader',
+            'saver',
+            'viewer',
+            'node-editor'
+        ]);
     }
 
     function restart() {

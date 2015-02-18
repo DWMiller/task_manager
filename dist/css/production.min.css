@@ -339,7 +339,7 @@ html, body, #main-container {
   border: 1px solid rgba(191, 191, 191, 0.5);
   box-shadow: rgba(0, 0, 0, 0.4) 7px 7px 10px 0px; }
 
-.shadow-sm, .button.raised {
+.shadow-sm, .button.raised, #node-editor {
   border: 1px solid rgba(191, 191, 191, 0.5);
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26); }
 
@@ -440,6 +440,11 @@ input[type="text"], input[type="password"], input[type="email"] {
     color: #fff; }
     .button.green:active, .button.green:focus, .button.green:hover {
       background-color: #27AE60; }
+  .button.red {
+    background-color: #E74C3C;
+    color: #fff; }
+    .button.red:active, .button.red:focus, .button.red:hover {
+      background-color: #C0392B; }
   .button.raised:active, .button.raised:focus, .button.raised:hover {
     box-shadow: none; }
 
@@ -455,15 +460,16 @@ input[type="text"], input[type="password"], input[type="email"] {
  * The primary container for the application content
  */
 [role="main"] {
+  padding-top: 2em;
   overflow: hidden;
   background-color: #ECF0F1;
   min-height: 100%;
+  max-height: 100%;
   padding-left: 1em;
   padding-right: 1em;
   transition: all 0.3s;
   width: 100%;
   position: absolute;
-  top: 2em;
   right: 0; }
   [role="main"].menu-active {
     -webkit-transform: translateX(-75%);
@@ -472,7 +478,6 @@ input[type="text"], input[type="password"], input[type="email"] {
 
 @media only screen and (min-width: 900px) {
   [role="main"] {
-    padding-top: 3em;
     padding-left: 5em;
     padding-right: 5em; }
     [role="main"].menu-active {
@@ -489,7 +494,18 @@ input[type="text"], input[type="password"], input[type="email"] {
           -ms-transform: translateX(-35%);
               transform: translateX(-35%); } }
 
+#project-name {
+  margin: auto;
+  position: absolute;
+  right: 45%; }
+
+#viewer {
+  width: 100%;
+  height: 100%; }
+
 [role="navigation"] {
+  position: absolute;
+  opacity: 0.5;
   background: black;
   min-height: 2em;
   width: 100%;
@@ -500,9 +516,10 @@ input[type="text"], input[type="password"], input[type="email"] {
   background-color: #c8cccc;
   width: 75%;
   position: absolute;
-  top: 2em;
+  padding-top: 2em;
   right: 0;
-  min-height: 100%; }
+  min-height: 100%;
+  max-height: 100%; }
   [role="menu"] header {
     overflow: hidden;
     background-color: #fbfcfc;
@@ -517,3 +534,12 @@ input[type="text"], input[type="password"], input[type="email"] {
 @media only screen and (min-width: 1400px) {
   [role="menu"] {
     width: 35%; } }
+
+#node-editor {
+  position: absolute;
+  background: rgba(200, 204, 204, 0.6);
+  top: 2em;
+  left: 0; }
+  #node-editor textarea {
+    min-width: 90%;
+    min-height: 5em; }

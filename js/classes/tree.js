@@ -27,13 +27,12 @@ dmf.classes.Tree.prototype.destroyNode = function(node) {
 dmf.classes.Tree.prototype.traverseNode = function(node, callback, parent) {
     callback(node, parent);
 
-    var children = node.children;
-
-    for (var i = 0, len = children.length; i < len; i++) {
-        if (!children[i].hasOwnProperty('traverseNode')) {
-            children[i] = new dmf.classes.TreeNode(this, children[i]);
+    for (var i = 0, len = node.children.length; i < len; i++) {
+        if (!node.children[i].hasOwnProperty('traverseNode')) {
+            // If not a node, create a node 
+            node.children[i] = new dmf.classes.TreeNode(this, node.children[i]);
         }
-        this.traverseNode(children[i], callback, node);
+        this.traverseNode(node.children[i], callback, node);
     }
 }
 

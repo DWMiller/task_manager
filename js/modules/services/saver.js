@@ -22,20 +22,14 @@ dmf.createModule('saver', function(c, config) {
         initializeProject();
         dataChanged();
 
-        c.notify({
-            type: 'project-opened',
-            data: true
-        });
+        c.notify('project-opened');
     }
 
     function dataChanged() {
         c.data.allProjects[c.data.project.projectId] = c.data.project;
         save();
 
-        c.notify({
-            type: 'project-saved',
-            data: true
-        });
+        c.notify('project-saved');
     }
 
     /************************************ GENERAL FUNCTIONS *******************/

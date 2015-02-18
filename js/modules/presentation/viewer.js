@@ -1,4 +1,4 @@
-CORE.createModule('viewer', function(c) {
+dmf.createModule('viewer', function(c) {
     'use strict';
 
     var properties = {
@@ -7,7 +7,8 @@ CORE.createModule('viewer', function(c) {
         listeners: {
             'project-opened': projectOpened,
             'node-created': nodeCreated,
-            'node-edited': nodeEdited
+            'node-edited': nodeEdited,
+            'node-deleted': nodeDeleted,
         }
     };
 
@@ -17,9 +18,7 @@ CORE.createModule('viewer', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function initialize(scope) {
-        elements = {
-            $viewer: $(scope.self())
-        };
+        elements.$viewer = $(scope.self());
 
         scope.self().width = elements.$viewer.parent().width();
         scope.self().height = elements.$viewer.parent().height();
@@ -50,7 +49,7 @@ CORE.createModule('viewer', function(c) {
 
         populateGraph();
 
-        var springy = window.springy = $('#viewer').springy({
+        var springy = window.springy = elements.$viewer.springy({
             graph: graph,
             nodeSelected: nodeSelected
         });
@@ -59,20 +58,28 @@ CORE.createModule('viewer', function(c) {
 
     function nodeCreated(data) {
         addGraphNode(data.node, data.parent);
+        elements.$viewer.trigger('node-selected', data.node.graphNode);
     }
 
     function nodeEdited(node) {
         node.graphNode.data.label = node.data.label;
         node.graphNode.data.description = node.data.description;
-    }    
+    }
+
+    function nodeDeleted(node) {
+        // console.log('Deleting', node);
+        // for (var i = 0; i < node.children.length; i++) {
+        //     nodeDeleted(node.children[i]);
+        // }
+
+        graph.removeNode(node.graphNode);
+    }
 
     /************************************ GENERAL FUNCTIONS ************************************/
 
     function populateGraph() {
         var rootNode = c.data.project.projectTree.rootNode;
-
         c.data.project.projectTree.traverseNode(rootNode, addGraphNode, rootNode);
-
     }
 
     function addGraphNode(node, parent) {
