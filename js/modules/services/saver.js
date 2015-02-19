@@ -9,13 +9,7 @@ dmf.createModule('saver', function(c, config) {
         }
     };
 
-
     /************************************ MODULE INITIALIZATION ***************/
-
-    function initialize(scope) {}
-
-    function destroy() {}
-
     /******************************* Framework Listeners **********************/
 
     function createNewProject() {
@@ -26,10 +20,14 @@ dmf.createModule('saver', function(c, config) {
     }
 
     function dataChanged() {
-        c.data.allProjects[c.data.project.projectId] = c.data.project;
-        save();
+         console.log('Change detected', c.data.project);
 
-        c.notify('project-saved');
+        // might not be needed to update location in all projects, 
+        // only relevant when switching between projects, at which point
+        // raw data from local storage could be pulled in again
+        
+        c.data.allProjects[c.data.project.projectId] = c.data.project; 
+        save();
     }
 
     /************************************ GENERAL FUNCTIONS *******************/
@@ -50,14 +48,13 @@ dmf.createModule('saver', function(c, config) {
     }
 
     function save() {
-        console.log('saved', c.data.project);
         localStorage.setItem(c.data.project.projectId, JSON.stringify(c.data.project));
+        console.log('saved to local storage', c.data.project);
+        c.notify('project-saved');
     }
 
     return {
         properties: properties,
-        initialize: initialize,
-        destroy: destroy,
     };
 
 });

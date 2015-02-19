@@ -3,7 +3,9 @@ dmf.createModule('loader', function(c, config) {
 
     var properties = {
         id: 'loader',
-        listeners: {}
+        listeners: {
+            'project-imported': getExistingProjects
+        }
     };
 
     /************************************ MODULE INITIALIZATION ************************************/

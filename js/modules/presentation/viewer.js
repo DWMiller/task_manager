@@ -13,7 +13,7 @@ dmf.createModule('viewer', function(c) {
     };
 
     var elements = {},
-        graph;
+        graph, $springy;
 
     /************************************ MODULE INITIALIZATION ************************************/
 
@@ -24,11 +24,13 @@ dmf.createModule('viewer', function(c) {
         scope.self().height = elements.$viewer.parent().height();
 
         bindEvents();
+        c.startModule('renderer');
     }
 
     function destroy() {
         unbindEvents();
         elements = null;
+        c.stopModule('renderer');
     }
 
     function bindEvents() {
@@ -41,19 +43,9 @@ dmf.createModule('viewer', function(c) {
 
     /******************************* Framework Listeners **********************/
     function projectOpened() {
-        if (graph) {
-            graph.empty();
-        } else {
-            graph = new Springy.Graph();
-        }
-
+        wipeGraph();
         populateGraph();
-
-        var springy = window.springy = elements.$viewer.springy({
-            graph: graph,
-            nodeSelected: nodeSelected
-        });
-
+        renderGraph();
     }
 
     function nodeCreated(data) {
@@ -77,9 +69,25 @@ dmf.createModule('viewer', function(c) {
 
     /************************************ GENERAL FUNCTIONS ************************************/
 
+    function wipeGraph() {
+        if (graph) {
+            graph.empty();
+        }
+    }
+
     function populateGraph() {
+        graph = new Springy.Graph();
         var rootNode = c.data.project.projectTree.rootNode;
         c.data.project.projectTree.traverseNode(rootNode, addGraphNode, rootNode);
+    }
+
+    function renderGraph() {
+        c.notify({
+            type: 'graph-ready',
+            data: {
+                graph: graph,
+            }
+        });
     }
 
     function addGraphNode(node, parent) {
@@ -93,13 +101,6 @@ dmf.createModule('viewer', function(c) {
                 color: '#00A0B0'
             });
         }
-    }
-
-    function nodeSelected(node) {
-        c.notify({
-            type: 'node-selected',
-            data: node.data.treeNode
-        });
     }
 
     return {

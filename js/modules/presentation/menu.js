@@ -69,8 +69,8 @@ dmf.createModule('menu', function(c) {
         var project = JSON.parse(jsonFile);
         var projectId = project.projectId;
         localStorage.setItem(projectId, JSON.stringify(project));
-        c.stopModule('loader');
-        c.startModule('loader');
+
+        c.notify('project-imported');
     }
 
     function projectExport() {
