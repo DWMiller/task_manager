@@ -240,10 +240,13 @@ dmf.createModule('renderer', function(c) {
 
         var isSelected = (selected !== null && selected.node !== null && selected.node.id === node.id);
 
-        var nodeStatus = treeNode.data.status || 'incomplete';
+        if(treeNode.data.status !== 'complete') {
+            treeNode.data.status = 'incomplete';
+        }
+
         var variant = isSelected ? 'selected' : 'default';
 
-        ctx.fillStyle = settings.colours.nodes[nodeStatus][variant];
+        ctx.fillStyle = settings.colours.nodes[treeNode.data.status][variant];
 
         var adjustedRadius = settings.nodes.radius + ((treeNode.data.importance || 1) * 2);
 
