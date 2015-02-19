@@ -49,6 +49,12 @@ dmf.createModule('menu-load', function(c) {
         for (var project in c.data.allProjects) {
             addProjectToList(c.data.allProjects[project]);
         }
+
+        var lastOpened = localStorage.getItem('last-opened');
+        if (lastOpened) {
+            elements['project-list'].value = lastOpened;
+            projectOpen();
+        }
     }
 
     function addProjectToList(project) {
@@ -61,6 +67,7 @@ dmf.createModule('menu-load', function(c) {
     function projectOpen(event) {
         var selectedIndex = elements['project-list'].selectedIndex;
         var projectId = elements['project-list'][selectedIndex].value;
+
         c.data.project = c.data.allProjects[projectId];
 
         var newTree = new dmf.classes.Tree();
@@ -68,7 +75,9 @@ dmf.createModule('menu-load', function(c) {
         newTree.rootNode = rootNode;
         c.data.project.projectTree = newTree;
 
+        localStorage.setItem('last-opened', projectId);
         c.notify('project-opened');
+
     }
 
     return {

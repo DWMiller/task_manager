@@ -10750,11 +10750,11 @@ dmf.createModule('controller', function(c, config) {
 
     function startup() {
         c.startModules(['menu',
+            'viewer',
             'menu-load',
             'menu-project',
             'loader',
             'saver',
-            'viewer',
             'node-editor'
         ]);
 
@@ -10837,6 +10837,12 @@ dmf.createModule('menu-load', function(c) {
         for (var project in c.data.allProjects) {
             addProjectToList(c.data.allProjects[project]);
         }
+
+        var lastOpened = localStorage.getItem('last-opened');
+        if (lastOpened) {
+            elements['project-list'].value = lastOpened;
+            projectOpen();
+        }
     }
 
     function addProjectToList(project) {
@@ -10849,6 +10855,7 @@ dmf.createModule('menu-load', function(c) {
     function projectOpen(event) {
         var selectedIndex = elements['project-list'].selectedIndex;
         var projectId = elements['project-list'][selectedIndex].value;
+
         c.data.project = c.data.allProjects[projectId];
 
         var newTree = new dmf.classes.Tree();
@@ -10856,7 +10863,9 @@ dmf.createModule('menu-load', function(c) {
         newTree.rootNode = rootNode;
         c.data.project.projectTree = newTree;
 
+        localStorage.setItem('last-opened', projectId);
         c.notify('project-opened');
+
     }
 
     return {
@@ -11418,10 +11427,13 @@ dmf.createModule('renderer', function(c) {
 
         var isSelected = (selected !== null && selected.node !== null && selected.node.id === node.id);
 
-        var nodeStatus = treeNode.data.status || 'incomplete';
+        if(treeNode.data.status !== 'complete') {
+            treeNode.data.status = 'incomplete';
+        }
+
         var variant = isSelected ? 'selected' : 'default';
 
-        ctx.fillStyle = settings.colours.nodes[nodeStatus][variant];
+        ctx.fillStyle = settings.colours.nodes[treeNode.data.status][variant];
 
         var adjustedRadius = settings.nodes.radius + ((treeNode.data.importance || 1) * 2);
 

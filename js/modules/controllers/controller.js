@@ -20,11 +20,11 @@ dmf.createModule('controller', function(c, config) {
 
     function startup() {
         c.startModules(['menu',
+            'viewer',
             'menu-load',
             'menu-project',
             'loader',
             'saver',
-            'viewer',
             'node-editor'
         ]);
 
