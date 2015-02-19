@@ -11051,16 +11051,20 @@ dmf.createModule('node-editor', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function p_initialize(scope) {
+
+        CKEDITOR.replace('node-description');
+
         elements = {
             'node-data': document.getElementById('node-data'),
             'node-commands': document.getElementById('node-commands'),
             'node-createChild': document.getElementById('node-createChild'),
             'node-delete': document.getElementById('node-delete'),
             'node-label': document.getElementById('node-label'),
-            'node-description': document.getElementById('node-description'),
+            'node-description': CKEDITOR.instances['node-description'], // document.getElementById('node-description'),
             'node-status': document.getElementById('node-status'),
             'node-importance': document.getElementById('node-importance'),
         };
+
         bindEvents();
     }
 
@@ -11071,20 +11075,14 @@ dmf.createModule('node-editor', function(c) {
 
     function bindEvents() {
         c.dom.listen(elements['node-createChild'], 'click', createChildNode);
-        c.dom.listen(elements['node-label'], 'change', updateNode);
-        c.dom.listen(elements['node-description'], 'change', updateNode);
-        c.dom.listen(elements['node-status'], 'change', updateNode);
+        c.dom.listen(elements['node-data'], 'change', updateNode);
         c.dom.listen(elements['node-delete'], 'click', deleteNode);
-        c.dom.listen(elements['node-importance'], 'change', updateNode);
     }
 
     function unbindEvents() {
         c.dom.ignore(elements['node-createChild'], 'click', createChildNode);
-        c.dom.ignore(elements['node-label'], 'change', updateNode);
-        c.dom.ignore(elements['node-description'], 'change', updateNode);
-        c.dom.ignore(elements['node-status'], 'change', updateNode);
+        c.dom.ignore(elements['node-data'], 'change', updateNode);
         c.dom.ignore(elements['node-delete'], 'click', deleteNode);
-        c.dom.ignore(elements['node-importance'], 'change', updateNode);
     }
 
     /******************************* Framework Listeners **********************/
@@ -11131,7 +11129,7 @@ dmf.createModule('node-editor', function(c) {
 
     function updateNode() {
         selectedNode.data.label = elements['node-label'].value;
-        selectedNode.data.description = elements['node-description'].value;
+        selectedNode.data.description = elements['node-description'].getData();
         selectedNode.data.status = elements['node-status'].value;
         selectedNode.data.importance = elements['node-importance'].value;
 
@@ -11145,7 +11143,7 @@ dmf.createModule('node-editor', function(c) {
 
     function updateEditor() {
         elements['node-label'].value = selectedNode.data.label;
-        elements['node-description'].value = selectedNode.data.description;
+        elements['node-description'].setData(selectedNode.data.description);
         elements['node-status'].value = selectedNode.data.status;
         elements['node-importance'].value = selectedNode.data.importance || 1;
     }
@@ -11192,23 +11190,22 @@ dmf.createModule('renderer', function(c) {
     var elements = {};
     var graph;
 
-    var stiffness = 600.0;
-    var repulsion = 400.0;
+    var stiffness = 300.0;
+    var repulsion = 500.0;
     var damping = 0.5;
     var minEnergyThreshold = 0.00001;
-    var selectedNodeHandler = null;
 
     var settings = {
         font: {
-            size: 16,
+            size: 12,
             face: "Open-sans, Verdana, sans-serif"
         },
         colours: {
-            font: "#FFFFFF",
+            font: "#000000",
             emptyNode: "#E6E9F7",
             selectedNode: "#FFFFE0",
             brokenNode: "#FFFFFF",
-            edge: '#000000',
+            edge: '#2980b9',
             nodes: {
                 incomplete: {
                     default: '#2980b9',
@@ -11219,7 +11216,14 @@ dmf.createModule('renderer', function(c) {
                     selected: '#2ecc71',
                 }
             }
+        },
+        nodes: {
+            radius: 40,
+        },
+        edges: {
+            width: 2
         }
+
     };
 
     var ctx, layout, currentBB, targetBB, renderer;
@@ -11240,16 +11244,14 @@ dmf.createModule('renderer', function(c) {
 
     function bindEvents() {
         $(elements.canvas).on('mousedown', mousedown);
-        // $(elements.canvas).on('node-selected', nodeSelected);
-        $(elements.canvas).on('dblclick', doubleClick);
+        // $(elements.canvas).on('dblclick', doubleClick);
         $(elements.canvas).on('mouseup', mouseup);
         $(elements.canvas).on('mousemove', mousemove);
     }
 
     function unbindEvents() {
-        // $(elements.canvas).off('node-selected', nodeSelected);
         $(elements.canvas).off('mousedown', mousedown);
-        $(elements.canvas).off('dblclick', doubleClick);
+        // $(elements.canvas).off('dblclick', doubleClick);
         $(elements.canvas).off('mouseup', mouseup);
         $(elements.canvas).off('mousemove', mousemove);
     }
@@ -11257,8 +11259,6 @@ dmf.createModule('renderer', function(c) {
     /******************************* Framework Listeners **********************/
 
     function render(data) {
-        selectedNodeHandler = data.nodeSelected;
-
         unbindEvents();
         bindEvents();
 
@@ -11275,239 +11275,17 @@ dmf.createModule('renderer', function(c) {
         };
 
         // auto adjusting bounding box
-        Springy.requestAnimationFrame(function adjust() {
-            targetBB = layout.getBoundingBox();
-            // current gets 20% closer to target every iteration
-            currentBB = {
-                bottomleft: currentBB.bottomleft.add(targetBB.bottomleft.subtract(currentBB.bottomleft)
-                    .divide(10)),
-                topright: currentBB.topright.add(targetBB.topright.subtract(currentBB.topright)
-                    .divide(10))
-            };
+        Springy.requestAnimationFrame(adjust);
 
-            Springy.requestAnimationFrame(adjust);
-        });
-
-        Springy.Node.prototype.getHeight = function() {
-            var node = this;
-            var treeNode = node.data.treeNode;
-            return settings.font.size + ((treeNode.data.importance || 1) * 1);
-            // In a more modular world, this would actually read the font size, but I think leaving it a constant is sufficient for now.
-            // If you change the font size, I'd adjust this too.            
-        };
-
-        Springy.Node.prototype.getWidth = function() {
-            var node = this;
-            var text = (node.data.label !== undefined) ? node.data.label : node.id;
-            if (node._width && node._width[text])
-                return node._width[text];
-
-            ctx.save();
-
-            var treeNode = node.data.treeNode;
-            var fontSize = settings.font.size + ((treeNode.data.importance || 1) * 1) + "px ";
-
-            ctx.font = fontSize + settings.font.face;
-            var width = ctx.measureText(text).width;
-            ctx.restore();
-
-            if (!node._width) {
-                node._width = {};
-            }
-
-            node._width[text] = width;
-
-            return width;
-        };
-
-        renderer = new Springy.Renderer(layout,
-            function clear() {
-                ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
-            },
-            function drawEdge(edge, p1, p2) {
-                var x1 = toScreen(p1).x;
-                var y1 = toScreen(p1).y;
-                var x2 = toScreen(p2).x;
-                var y2 = toScreen(p2).y;
-
-                var direction = new Springy.Vector(x2 - x1, y2 - y1);
-                var normal = direction.normal().normalise();
-
-                var from = graph.getEdges(edge.source, edge.target);
-                var to = graph.getEdges(edge.target, edge.source);
-
-                var total = from.length + to.length;
-
-                // Figure out edge's position in relation to other edges between the same nodes
-                var n = 0;
-                for (var i = 0; i < from.length; i++) {
-                    if (from[i].id === edge.id) {
-                        n = i;
-                    }
-                }
-
-                //change default to  10.0 to allow text fit between edges
-                var spacing = 12.0;
-
-                // Figure out how far off center the line should be drawn
-                var offset = normal.multiply(-((total - 1) * spacing) / 2.0 + (n * spacing));
-
-                var paddingX = 6;
-                var paddingY = 6;
-
-                var s1 = toScreen(p1).add(offset);
-                var s2 = toScreen(p2).add(offset);
-
-                var boxWidth = edge.target.getWidth() + paddingX;
-                var boxHeight = edge.target.getHeight() + paddingY;
-
-                var intersection = intersect_line_box(s1, s2, {
-                    x: x2 - boxWidth / 2.0,
-                    y: y2 - boxHeight / 2.0
-                }, boxWidth, boxHeight);
-
-                if (!intersection) {
-                    intersection = s2;
-                }
-
-                var stroke = (edge.data.color !== undefined) ? edge.data.color : '#000000';
-
-                var weight = (edge.data.weight !== undefined) ? edge.data.weight : 1.0;
-
-                ctx.lineWidth = Math.max(weight * 2, 0.1);
-
-                // line
-                var lineEnd = s2;
-
-                ctx.strokeStyle = stroke;
-                ctx.beginPath();
-                ctx.moveTo(s1.x, s1.y);
-                ctx.lineTo(lineEnd.x, lineEnd.y);
-                ctx.stroke();
-
-            },
-            function drawNode(node, p) {
-                var treeNode = node.data.treeNode;
-
-                var s = toScreen(p);
-
-                ctx.save();
-
-                // Pulled out the padding aspect sso that the size functions could be used in multiple places
-                // These should probably be settable by the user (and scoped higher) but this suffices for now
-                var paddingX = 12;
-                var paddingY = 12;
-
-                var contentWidth = node.getWidth();
-                var contentHeight = node.getHeight();
-                var boxWidth = contentWidth + paddingX;
-                var boxHeight = contentHeight + paddingY;
-                var fontSize = settings.font.size + ((treeNode.data.importance || 1) * 1) + "px ";
-                // console.log(fontSize);
-                // clear background
-                ctx.clearRect(s.x - boxWidth / 2, s.y - boxHeight / 2, boxWidth, boxHeight);
-
-
-
-                var isSelected = (selected !== null && selected.node !== null && selected.node.id === node.id);
-
-                var nodeStatus = treeNode.data.status || 'incomplete';
-                var variant = isSelected ? 'selected' : 'default';
-
-                ctx.fillStyle = settings.colours.nodes[nodeStatus][variant];
-
-                boxHeight += ((treeNode.data.importance || 1) * 1);
-
-                // fill background
-                if (isSelected) {
-                    boxHeight *= 1.25;
-                    boxWidth *= 1.25;
-                }
-
-                // } else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
-                //     ctx.fillStyle = settings.colours.emptyNode;
-
-                ctx.fillRect(s.x - boxWidth / 2, s.y - boxHeight / 2, boxWidth, boxHeight);
-
-                ctx.textAlign = "left";
-                ctx.textBaseline = "top";
-                ctx.font = fontSize + settings.font.face;
-                ctx.fillStyle = settings.colours.edge;
-                var text = node.data.label;
-
-                ctx.fillText(text, s.x - contentWidth / 2, s.y - contentHeight / 2);
-
-                ctx.restore();
-            }
-        );
+        renderer = new Springy.Renderer(layout, clear,
+            drawEdge,
+            drawNode);
 
         renderer.start();
 
-        // helpers for figuring out where to draw arrows
-        function intersect_line_line(p1, p2, p3, p4) {
-            var denom = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
-
-            // lines are parallel
-            if (denom === 0) {
-                return false;
-            }
-
-            var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
-            var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
-
-            if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
-                return false;
-            }
-
-            return new Springy.Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
-        }
-
-        function intersect_line_box(p1, p2, p3, w, h) {
-            var tl = {
-                x: p3.x,
-                y: p3.y
-            };
-            var tr = {
-                x: p3.x + w,
-                y: p3.y
-            };
-            var bl = {
-                x: p3.x,
-                y: p3.y + h
-            };
-            var br = {
-                x: p3.x + w,
-                y: p3.y + h
-            };
-
-            var result;
-
-
-            result = intersect_line_line(p1, p2, tl, tr);
-            if (result) {
-                return result;
-            } // top
-
-            result = intersect_line_line(p1, p2, tr, br);
-            if (result) {
-                return result;
-            } // right
-
-            result = intersect_line_line(p1, p2, br, bl);
-            if (result) {
-                return result;
-            } // bottom
-
-            result = intersect_line_line(p1, p2, bl, tl);
-            if (result) {
-                return result;
-            } // left
-
-            return false;
-        }
     }
 
-    /************************************ UI Handlers ************************************/
+    /************************************ UI Handlers *************************/
 
     function mousedown(e) {
         var pos = jQuery(event.target).offset();
@@ -11519,7 +11297,7 @@ dmf.createModule('renderer', function(c) {
 
         if (selected.node !== null) {
             dragged.point.m = 10000.0;
-            dragged = null; // no dragging
+            // dragged = null; // no dragging
             nodeSelected(selected.node);
         }
 
@@ -11532,6 +11310,7 @@ dmf.createModule('renderer', function(c) {
 
     function mousemove(e) {
         var pos = jQuery(event.target).offset();
+
         var p = fromScreen({
             x: e.pageX - pos.left,
             y: e.pageY - pos.top
@@ -11546,18 +11325,21 @@ dmf.createModule('renderer', function(c) {
         renderer.start();
     }
 
-    function doubleClick(e) {
-        var pos = jQuery(event.target).offset();
-        var p = fromScreen({
-            x: e.pageX - pos.left,
-            y: e.pageY - pos.top
-        });
-        selected = layout.nearest(p);
-        node = selected.node;
-        if (node && node.data && node.data.ondoubleclick) {
-            node.data.ondoubleclick();
-        }
-    }
+    // function doubleClick(e) {
+    //     var pos = jQuery(event.target).offset();
+
+    //     var p = fromScreen({
+    //         x: e.pageX - pos.left,
+    //         y: e.pageY - pos.top
+    //     });
+    //     selected = layout.nearest(p);
+
+    //     var node = selected.node;
+
+    //     if (node && node.data && node.data.ondoubleclick) {
+    //         node.data.ondoubleclick();
+    //     }
+    // }
 
     function nodeSelected(node) {
         selected = {
@@ -11570,7 +11352,141 @@ dmf.createModule('renderer', function(c) {
         });
     }
 
-    /************************************ GENERAL FUNCTIONS ************************************/
+    /************************************ DRAWING FUNCTIONS *******************/
+
+    function drawEdge(edge, p1, p2) {
+        var x1 = toScreen(p1).x;
+        var y1 = toScreen(p1).y;
+        var x2 = toScreen(p2).x;
+        var y2 = toScreen(p2).y;
+
+        var direction = new Springy.Vector(x2 - x1, y2 - y1);
+        var normal = direction.normal().normalise();
+
+        var from = graph.getEdges(edge.source, edge.target);
+        var to = graph.getEdges(edge.target, edge.source);
+
+        var total = from.length + to.length;
+
+        // Figure out edge's position in relation to other edges between the same nodes
+        var n = 0;
+        for (var i = 0; i < from.length; i++) {
+            if (from[i].id === edge.id) {
+                n = i;
+            }
+        }
+
+        //change default to  10.0 to allow text fit between edges
+        var spacing = 12.0;
+
+        // Figure out how far off center the line should be drawn
+        var offset = normal.multiply(-((total - 1) * spacing) / 2.0 + (n * spacing));
+
+        var s1 = toScreen(p1).add(offset);
+        var s2 = toScreen(p2).add(offset);
+
+        var diameter = settings.nodes.radius * 2;
+
+        var intersection = intersect_line_box(s1, s2, {
+            x: x2 - settings.nodes.radius,
+            y: y2 - settings.nodes.radius
+        }, diameter, diameter);
+
+        if (!intersection) {
+            intersection = s2;
+        }
+
+        ctx.lineWidth = Math.max(settings.edges.width, 0.1);
+
+        // line
+        var lineEnd = s2;
+
+        ctx.strokeStyle = settings.colours.edge;
+        ctx.beginPath();
+        ctx.moveTo(s1.x, s1.y);
+        ctx.lineTo(lineEnd.x, lineEnd.y);
+        ctx.stroke();
+
+    }
+
+    function drawNode(node, p) {
+        var treeNode = node.data.treeNode;
+
+        var s = toScreen(p);
+
+        ctx.save();
+
+        var isSelected = (selected !== null && selected.node !== null && selected.node.id === node.id);
+
+        var nodeStatus = treeNode.data.status || 'incomplete';
+        var variant = isSelected ? 'selected' : 'default';
+
+        ctx.fillStyle = settings.colours.nodes[nodeStatus][variant];
+
+        var adjustedRadius = settings.nodes.radius + ((treeNode.data.importance || 1) * 2);
+
+        // fill background
+        if (isSelected) {
+            adjustedRadius *= 1.2;
+        }
+
+        clearCircle(s.x, s.y, adjustedRadius);
+        drawCircle(s.x, s.y, adjustedRadius);
+
+        var fontSize = settings.font.size + "px "; // + ((treeNode.data.importance || 1) * 1) + "px ";
+
+        ctx.textAlign = "center";
+        // ctx.textBaseline = "middle";
+        ctx.font = fontSize + settings.font.face;
+        ctx.fillStyle = settings.colours.font;
+        var text = node.data.label;
+
+        drawWrappedText(text, s.x, s.y - settings.font.size, adjustedRadius * 2);
+
+        ctx.restore();
+    }
+
+    function drawCircle(x, y, radius) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+
+
+    function drawWrappedText(text, x, y, maxWidth) {
+        var words = text.split(' ');
+        var line = '';
+
+        for (var n = 0; n < words.length; n++) {
+            var testLine = line + words[n] + ' ';
+            var metrics = ctx.measureText(testLine);
+            var testWidth = metrics.width;
+            if (testWidth > maxWidth && n > 0) {
+                ctx.fillText(line, x, y);
+                line = words[n] + ' ';
+                y += settings.font.size;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, x, y);
+    }
+
+    function clearCircle(x, y, radius) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius+1, 0, 2 * Math.PI);
+        ctx.clip();
+        ctx.clearRect(x - radius - 1, y - radius - 1,
+            radius * 2 + 2, radius * 2 + 2);
+    }
+
+    /************************************ GENERAL FUNCTIONS *******************/
+
+    function clear() {
+        ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+    }
+
+
 
     // convert to/from screen coordinates
     function toScreen(p) {
@@ -11592,6 +11508,81 @@ dmf.createModule('renderer', function(c) {
     }
 
 
+    // helpers for figuring out where to draw arrows
+    function intersect_line_line(p1, p2, p3, p4) {
+        var denom = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
+
+        // lines are parallel
+        if (denom === 0) {
+            return false;
+        }
+
+        var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
+        var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
+
+        if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+            return false;
+        }
+
+        return new Springy.Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
+    }
+
+    function intersect_line_box(p1, p2, p3, w, h) {
+        var tl = {
+            x: p3.x,
+            y: p3.y
+        };
+        var tr = {
+            x: p3.x + w,
+            y: p3.y
+        };
+        var bl = {
+            x: p3.x,
+            y: p3.y + h
+        };
+        var br = {
+            x: p3.x + w,
+            y: p3.y + h
+        };
+
+        var result;
+
+
+        result = intersect_line_line(p1, p2, tl, tr);
+        if (result) {
+            return result;
+        } // top
+
+        result = intersect_line_line(p1, p2, tr, br);
+        if (result) {
+            return result;
+        } // right
+
+        result = intersect_line_line(p1, p2, br, bl);
+        if (result) {
+            return result;
+        } // bottom
+
+        result = intersect_line_line(p1, p2, bl, tl);
+        if (result) {
+            return result;
+        } // left
+
+        return false;
+    }
+
+    function adjust() {
+        targetBB = layout.getBoundingBox();
+        // current gets 20% closer to target every iteration
+        currentBB = {
+            bottomleft: currentBB.bottomleft.add(targetBB.bottomleft.subtract(currentBB.bottomleft)
+                .divide(10)),
+            topright: currentBB.topright.add(targetBB.topright.subtract(currentBB.topright)
+                .divide(10))
+        };
+
+        Springy.requestAnimationFrame(adjust);
+    }
 
     return {
         properties: properties,

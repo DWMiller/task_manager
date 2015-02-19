@@ -15,16 +15,20 @@ dmf.createModule('node-editor', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function p_initialize(scope) {
+
+        CKEDITOR.replace('node-description');
+
         elements = {
             'node-data': document.getElementById('node-data'),
             'node-commands': document.getElementById('node-commands'),
             'node-createChild': document.getElementById('node-createChild'),
             'node-delete': document.getElementById('node-delete'),
             'node-label': document.getElementById('node-label'),
-            'node-description': document.getElementById('node-description'),
+            'node-description': CKEDITOR.instances['node-description'], // document.getElementById('node-description'),
             'node-status': document.getElementById('node-status'),
             'node-importance': document.getElementById('node-importance'),
         };
+
         bindEvents();
     }
 
@@ -35,20 +39,14 @@ dmf.createModule('node-editor', function(c) {
 
     function bindEvents() {
         c.dom.listen(elements['node-createChild'], 'click', createChildNode);
-        c.dom.listen(elements['node-label'], 'change', updateNode);
-        c.dom.listen(elements['node-description'], 'change', updateNode);
-        c.dom.listen(elements['node-status'], 'change', updateNode);
+        c.dom.listen(elements['node-data'], 'change', updateNode);
         c.dom.listen(elements['node-delete'], 'click', deleteNode);
-        c.dom.listen(elements['node-importance'], 'change', updateNode);
     }
 
     function unbindEvents() {
         c.dom.ignore(elements['node-createChild'], 'click', createChildNode);
-        c.dom.ignore(elements['node-label'], 'change', updateNode);
-        c.dom.ignore(elements['node-description'], 'change', updateNode);
-        c.dom.ignore(elements['node-status'], 'change', updateNode);
+        c.dom.ignore(elements['node-data'], 'change', updateNode);
         c.dom.ignore(elements['node-delete'], 'click', deleteNode);
-        c.dom.ignore(elements['node-importance'], 'change', updateNode);
     }
 
     /******************************* Framework Listeners **********************/
@@ -95,7 +93,7 @@ dmf.createModule('node-editor', function(c) {
 
     function updateNode() {
         selectedNode.data.label = elements['node-label'].value;
-        selectedNode.data.description = elements['node-description'].value;
+        selectedNode.data.description = elements['node-description'].getData();
         selectedNode.data.status = elements['node-status'].value;
         selectedNode.data.importance = elements['node-importance'].value;
 
@@ -109,7 +107,7 @@ dmf.createModule('node-editor', function(c) {
 
     function updateEditor() {
         elements['node-label'].value = selectedNode.data.label;
-        elements['node-description'].value = selectedNode.data.description;
+        elements['node-description'].setData(selectedNode.data.description);
         elements['node-status'].value = selectedNode.data.status;
         elements['node-importance'].value = selectedNode.data.importance || 1;
     }
