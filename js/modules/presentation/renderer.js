@@ -1,69 +1,95 @@
-/**
-Copyright (c) 2010 Dennis Hotson
+dmf.createModule('renderer', function(c) {
+    'use strict';
 
- Permission is hereby granted, free of charge, to any person
- obtaining a copy of this software and associated documentation
- files (the "Software"), to deal in the Software without
- restriction, including without limitation the rights to use,
- copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the
- Software is furnished to do so, subject to the following
- conditions:
+    var properties = {
+        id: 'renderer',
+        selector: 'viewer',
+        listeners: {
+            'graph-ready': render
+        }
+    };
 
- The above copyright notice and this permission notice shall be
- included in all copies or substantial portions of the Software.
+    var elements = {};
+    var graph;
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- OTHER DEALINGS IN THE SOFTWARE.
-*/
+    var stiffness = 600.0;
+    var repulsion = 400.0;
+    var damping = 0.5;
+    var minEnergyThreshold = 0.00001;
+    var selectedNodeHandler = null;
 
-(function() {
-
-    jQuery.fn.springy = function(params) {
-        var graph = this.graph = params.graph || new Springy.Graph();
-        var stiffness = params.stiffness || 600.0;
-        var repulsion = params.repulsion || 400.0;
-        var damping = params.damping || 0.5;
-        var minEnergyThreshold = params.minEnergyThreshold || 0.00001;
-        var nodeSelected = params.nodeSelected || null;
-
-        var settings = {
-            font: {
-                size: 16,
-                face: "Open-sans, Verdana, sans-serif"
-            },
-            colours: {
-                font: "#FFFFFF",
-                emptyNode: "#E6E9F7",
-                selectedNode: "#FFFFE0",
-                brokenNode: "#FFFFFF",
-                edge: '#000000',
-                nodes: {
-                    incomplete: {
-                        default: '#2980b9',
-                        selected: '#3498db',
-                    },
-                    complete: {
-                        default: '#27ae60',
-                        selected: '#2ecc71',
-                    }
+    var settings = {
+        font: {
+            size: 16,
+            face: "Open-sans, Verdana, sans-serif"
+        },
+        colours: {
+            font: "#FFFFFF",
+            emptyNode: "#E6E9F7",
+            selectedNode: "#FFFFE0",
+            brokenNode: "#FFFFFF",
+            edge: '#000000',
+            nodes: {
+                incomplete: {
+                    default: '#2980b9',
+                    selected: '#3498db',
+                },
+                complete: {
+                    default: '#27ae60',
+                    selected: '#2ecc71',
                 }
             }
-        };
-        var canvas = this[0];
-        var ctx = canvas.getContext("2d");
+        }
+    };
 
-        var layout = this.layout = new Springy.Layout.ForceDirected(graph, stiffness, repulsion, damping, minEnergyThreshold);
+    var ctx, layout, currentBB, targetBB, renderer;
+
+    // half-assed drag and drop
+    var selected = null;
+    var nearest = null;
+    var dragged = null;
+
+    function initialize(scope) {
+        elements.canvas = document.getElementById('viewer');
+    }
+
+    function destroy() {
+        elements = {};
+        unbindEvents();
+    }
+
+    function bindEvents() {
+        $(elements.canvas).on('mousedown', mousedown);
+        // $(elements.canvas).on('node-selected', nodeSelected);
+        $(elements.canvas).on('dblclick', doubleClick);
+        $(elements.canvas).on('mouseup', mouseup);
+        $(elements.canvas).on('mousemove', mousemove);
+    }
+
+    function unbindEvents() {
+        // $(elements.canvas).off('node-selected', nodeSelected);
+        $(elements.canvas).off('mousedown', mousedown);
+        $(elements.canvas).off('dblclick', doubleClick);
+        $(elements.canvas).off('mouseup', mouseup);
+        $(elements.canvas).off('mousemove', mousemove);
+    }
+
+    /******************************* Framework Listeners **********************/
+
+    function render(data) {
+        selectedNodeHandler = data.nodeSelected;
+
+        unbindEvents();
+        bindEvents();
+
+        graph = data.graph;
+        ctx = elements.canvas.getContext("2d");
+        layout = new Springy.Layout.ForceDirected(graph, stiffness, repulsion, damping, minEnergyThreshold);
 
         // calculate bounding box of graph layout.. with ease-in
-        var currentBB = layout.getBoundingBox();
-        var targetBB = {
+        currentBB = layout.getBoundingBox();
+
+        targetBB = {
             bottomleft: new Springy.Vector(-2, -2),
             topright: new Springy.Vector(2, 2)
         };
@@ -82,102 +108,13 @@ Copyright (c) 2010 Dennis Hotson
             Springy.requestAnimationFrame(adjust);
         });
 
-        // convert to/from screen coordinates
-        var toScreen = function(p) {
-            var size = currentBB.topright.subtract(currentBB.bottomleft);
-            var sx = p.subtract(currentBB.bottomleft).divide(size.x).x * canvas.width;
-            var sy = p.subtract(currentBB.bottomleft).divide(size.y).y * canvas.height;
-            return new Springy.Vector(sx, sy);
-        };
-
-        var fromScreen = function(s) {
-            var size = currentBB.topright.subtract(currentBB.bottomleft);
-            var px = (s.x / canvas.width) * size.x + currentBB.bottomleft.x;
-            var py = (s.y / canvas.height) * size.y + currentBB.bottomleft.y;
-            return new Springy.Vector(px, py);
-        };
-
-        // half-assed drag and drop
-        var selected = null;
-        var nearest = null;
-        var dragged = null;
-
-        jQuery(canvas).mousedown(function(e) {
-            var pos = jQuery(this).offset();
-            var p = fromScreen({
-                x: e.pageX - pos.left,
-                y: e.pageY - pos.top
-            });
-            selected = nearest = dragged = layout.nearest(p);
-
-            if (selected.node !== null) {
-                dragged.point.m = 10000.0;
-
-                if (nodeSelected) {
-                    dragged = null; // no dragging
-                    nodeSelected(selected.node);
-                }
-            }
-
-            renderer.start();
-        });
-
-        jQuery(canvas).on('node-selected', function(event, node) {
-            event.preventDefault();
-            console.log(event, node);
-
-            selected = {
-                node: node
-            }
-            nodeSelected(selected.node);
-
-        });
-
-        function changeSelected(node) {
-            console.log(selected);
-        }
-
-        // Basic double click handler
-        jQuery(canvas).dblclick(function(e) {
-            var pos = jQuery(this).offset();
-            var p = fromScreen({
-                x: e.pageX - pos.left,
-                y: e.pageY - pos.top
-            });
-            selected = layout.nearest(p);
-            node = selected.node;
-            if (node && node.data && node.data.ondoubleclick) {
-                node.data.ondoubleclick();
-            }
-        });
-
-        jQuery(canvas).mousemove(function(e) {
-            var pos = jQuery(this).offset();
-            var p = fromScreen({
-                x: e.pageX - pos.left,
-                y: e.pageY - pos.top
-            });
-            nearest = layout.nearest(p);
-
-            if (dragged !== null && dragged.node !== null) {
-                dragged.point.p.x = p.x;
-                dragged.point.p.y = p.y;
-            }
-
-            renderer.start();
-        });
-
-        jQuery(window).bind('mouseup', function(e) {
-            dragged = null;
-        });
-
         Springy.Node.prototype.getHeight = function() {
             var node = this;
             var treeNode = node.data.treeNode;
-            return settings.font.size + ((treeNode.data.importance || 1)*1);
+            return settings.font.size + ((treeNode.data.importance || 1) * 1);
             // In a more modular world, this would actually read the font size, but I think leaving it a constant is sufficient for now.
             // If you change the font size, I'd adjust this too.            
-        }
+        };
 
         Springy.Node.prototype.getWidth = function() {
             var node = this;
@@ -188,21 +125,24 @@ Copyright (c) 2010 Dennis Hotson
             ctx.save();
 
             var treeNode = node.data.treeNode;
-            var fontSize = settings.font.size + ((treeNode.data.importance || 1)*1) + "px ";
+            var fontSize = settings.font.size + ((treeNode.data.importance || 1) * 1) + "px ";
 
             ctx.font = fontSize + settings.font.face;
             var width = ctx.measureText(text).width;
             ctx.restore();
 
-            node._width || (node._width = {});
+            if (!node._width) {
+                node._width = {};
+            }
+
             node._width[text] = width;
 
             return width;
-        }
+        };
 
-        var renderer = this.renderer = new Springy.Renderer(layout,
+        renderer = new Springy.Renderer(layout,
             function clear() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
             },
             function drawEdge(edge, p1, p2) {
                 var x1 = toScreen(p1).x;
@@ -282,8 +222,8 @@ Copyright (c) 2010 Dennis Hotson
                 var contentHeight = node.getHeight();
                 var boxWidth = contentWidth + paddingX;
                 var boxHeight = contentHeight + paddingY;
-                var fontSize = settings.font.size + ((treeNode.data.importance || 1)*1) + "px ";
-                console.log(fontSize);
+                var fontSize = settings.font.size + ((treeNode.data.importance || 1) * 1) + "px ";
+                // console.log(fontSize);
                 // clear background
                 ctx.clearRect(s.x - boxWidth / 2, s.y - boxHeight / 2, boxWidth, boxHeight);
 
@@ -296,7 +236,7 @@ Copyright (c) 2010 Dennis Hotson
 
                 ctx.fillStyle = settings.colours.nodes[nodeStatus][variant];
 
-                boxHeight += ((treeNode.data.importance || 1)*1);
+                boxHeight += ((treeNode.data.importance || 1) * 1);
 
                 // fill background
                 if (isSelected) {
@@ -361,23 +301,122 @@ Copyright (c) 2010 Dennis Hotson
             };
 
             var result;
-            if (result = intersect_line_line(p1, p2, tl, tr)) {
+
+
+            result = intersect_line_line(p1, p2, tl, tr);
+            if (result) {
                 return result;
             } // top
-            if (result = intersect_line_line(p1, p2, tr, br)) {
+
+            result = intersect_line_line(p1, p2, tr, br);
+            if (result) {
                 return result;
             } // right
-            if (result = intersect_line_line(p1, p2, br, bl)) {
+
+            result = intersect_line_line(p1, p2, br, bl);
+            if (result) {
                 return result;
             } // bottom
-            if (result = intersect_line_line(p1, p2, bl, tl)) {
+
+            result = intersect_line_line(p1, p2, bl, tl);
+            if (result) {
                 return result;
             } // left
 
             return false;
         }
-
-        return this;
     }
 
-})();
+    /************************************ UI Handlers ************************************/
+
+    function mousedown(e) {
+        var pos = jQuery(event.target).offset();
+        var p = fromScreen({
+            x: e.pageX - pos.left,
+            y: e.pageY - pos.top
+        });
+        selected = nearest = dragged = layout.nearest(p);
+
+        if (selected.node !== null) {
+            dragged.point.m = 10000.0;
+            dragged = null; // no dragging
+            nodeSelected(selected.node);
+        }
+
+        renderer.start();
+    }
+
+    function mouseup(e) {
+        dragged = null;
+    }
+
+    function mousemove(e) {
+        var pos = jQuery(event.target).offset();
+        var p = fromScreen({
+            x: e.pageX - pos.left,
+            y: e.pageY - pos.top
+        });
+        nearest = layout.nearest(p);
+
+        if (dragged !== null && dragged.node !== null) {
+            dragged.point.p.x = p.x;
+            dragged.point.p.y = p.y;
+        }
+
+        renderer.start();
+    }
+
+    function doubleClick(e) {
+        var pos = jQuery(event.target).offset();
+        var p = fromScreen({
+            x: e.pageX - pos.left,
+            y: e.pageY - pos.top
+        });
+        selected = layout.nearest(p);
+        node = selected.node;
+        if (node && node.data && node.data.ondoubleclick) {
+            node.data.ondoubleclick();
+        }
+    }
+
+    function nodeSelected(node) {
+        selected = {
+            node: node
+        };
+
+        c.notify({
+            type: 'node-selected',
+            data: node.data.treeNode
+        });
+    }
+
+    /************************************ GENERAL FUNCTIONS ************************************/
+
+    // convert to/from screen coordinates
+    function toScreen(p) {
+        var size = currentBB.topright.subtract(currentBB.bottomleft);
+        var sx = p.subtract(currentBB.bottomleft).divide(size.x).x * elements.canvas.width;
+        var sy = p.subtract(currentBB.bottomleft).divide(size.y).y * elements.canvas.height;
+        return new Springy.Vector(sx, sy);
+    }
+
+    function fromScreen(s) {
+        var size = currentBB.topright.subtract(currentBB.bottomleft);
+        var px = (s.x / elements.canvas.width) * size.x + currentBB.bottomleft.x;
+        var py = (s.y / elements.canvas.height) * size.y + currentBB.bottomleft.y;
+        return new Springy.Vector(px, py);
+    }
+
+    function changeSelected(node) {
+        console.log(selected);
+    }
+
+
+
+    return {
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
+    };
+
+});
