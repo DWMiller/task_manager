@@ -27,6 +27,7 @@ dmf.createModule('saver', function(c, config) {
         // raw data from local storage could be pulled in again
         
         c.data.allProjects[c.data.project.projectId] = c.data.project; 
+        
         save();
     }
 

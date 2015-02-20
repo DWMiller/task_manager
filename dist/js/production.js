@@ -10838,8 +10838,15 @@ dmf.createModule('menu-load', function(c) {
             addProjectToList(c.data.allProjects[project]);
         }
 
+        if(c.data.project) {
+            // don't bother opening last project if a project is already open
+            // only for first load
+            return;
+        }
+
         var lastOpened = localStorage.getItem('last-opened');
-        if (lastOpened) {
+
+        if (lastOpened && c.data.allProjects[lastOpened]) {
             elements['project-list'].value = lastOpened;
             projectOpen();
         }
@@ -10855,17 +10862,21 @@ dmf.createModule('menu-load', function(c) {
     function projectOpen(event) {
         var selectedIndex = elements['project-list'].selectedIndex;
         var projectId = elements['project-list'][selectedIndex].value;
-
-        c.data.project = c.data.allProjects[projectId];
+        
+        // c.data.project = c.data.allProjects[projectId];
+        
+        var projectData = JSON.parse(localStorage.getItem(projectId));
+        var treeData = projectData.projectTree;
 
         var newTree = new dmf.classes.Tree();
-        var rootNode = new dmf.classes.TreeNode(newTree, c.data.project.projectTree);
-        newTree.rootNode = rootNode;
-        c.data.project.projectTree = newTree;
+        newTree.rootNode = new dmf.classes.TreeNode(newTree,treeData);
+
+        projectData.projectTree = newTree;
+
+        c.data.project = projectData;
 
         localStorage.setItem('last-opened', projectId);
         c.notify('project-opened');
-
     }
 
     return {
@@ -11097,11 +11108,12 @@ dmf.createModule('node-editor', function(c) {
     /******************************* Framework Listeners **********************/
     function nodeSelected(treeNode) {
         //trigger a save before changing the editor panel content
-        if (selectedNode) {
+        if (selectedNode && selectedNode !== treeNode) {
             updateNode();
         }
 
         selectedNode = treeNode;
+
         updateEditor();
         elements['node-label'].focus();
         elements['node-label'].select();
@@ -11137,6 +11149,7 @@ dmf.createModule('node-editor', function(c) {
     }
 
     function updateNode() {
+        
         selectedNode.data.label = elements['node-label'].value;
         selectedNode.data.description = elements['node-description'].getData();
         selectedNode.data.status = elements['node-status'].value;
@@ -11192,7 +11205,9 @@ dmf.createModule('renderer', function(c) {
         id: 'renderer',
         selector: 'viewer',
         listeners: {
-            'graph-ready': render
+            'graph-ready': startRendering,
+            'graph-unready': stopRendering,
+
         }
     };
 
@@ -11237,6 +11252,10 @@ dmf.createModule('renderer', function(c) {
 
     var ctx, layout, currentBB, targetBB, renderer;
 
+    var state = {
+        ready: false
+    };
+
     // half-assed drag and drop
     var selected = null;
     var nearest = null;
@@ -11256,6 +11275,7 @@ dmf.createModule('renderer', function(c) {
         // $(elements.canvas).on('dblclick', doubleClick);
         $(elements.canvas).on('mouseup', mouseup);
         $(elements.canvas).on('mousemove', mousemove);
+        $(elements.canvas).on('node-clicked', nodeClicked);
     }
 
     function unbindEvents() {
@@ -11263,13 +11283,15 @@ dmf.createModule('renderer', function(c) {
         // $(elements.canvas).off('dblclick', doubleClick);
         $(elements.canvas).off('mouseup', mouseup);
         $(elements.canvas).off('mousemove', mousemove);
+        $(elements.canvas).off('node-clicked', nodeClicked);
     }
 
     /******************************* Framework Listeners **********************/
 
-    function render(data) {
+    function startRendering(data) {
         unbindEvents();
         bindEvents();
+        state.ready = true;
 
         graph = data.graph;
         ctx = elements.canvas.getContext("2d");
@@ -11291,7 +11313,13 @@ dmf.createModule('renderer', function(c) {
             drawNode);
 
         renderer.start();
+    }
 
+    function stopRendering() {
+        state.ready = false;
+        if (renderer) {
+            renderer.stop();
+        }
     }
 
     /************************************ UI Handlers *************************/
@@ -11307,7 +11335,14 @@ dmf.createModule('renderer', function(c) {
         if (selected.node !== null) {
             dragged.point.m = 10000.0;
             // dragged = null; // no dragging
-            nodeSelected(selected.node);
+
+            console.log('springy node selected', selected.node);
+
+            c.notify({
+                type: 'node-selected',
+                data: selected.node.data.treeNode
+            });
+
         }
 
         renderer.start();
@@ -11350,14 +11385,20 @@ dmf.createModule('renderer', function(c) {
     //     }
     // }
 
-    function nodeSelected(node) {
+    /**
+     * Used to simiulate a click on a node using a trigger jquery event
+     * @param  {[type]} e    [description]
+     * @param  {[type]} node [description]
+     * @return {[type]}      [description]
+     */
+    function nodeClicked(e, node) {
         selected = {
             node: node
         };
 
         c.notify({
             type: 'node-selected',
-            data: node.data.treeNode
+            data: selected.node.data.treeNode
         });
     }
 
@@ -11427,7 +11468,7 @@ dmf.createModule('renderer', function(c) {
 
         var isSelected = (selected !== null && selected.node !== null && selected.node.id === node.id);
 
-        if(treeNode.data.status !== 'complete') {
+        if (treeNode.data.status !== 'complete') {
             treeNode.data.status = 'incomplete';
         }
 
@@ -11486,7 +11527,7 @@ dmf.createModule('renderer', function(c) {
 
     function clearCircle(x, y, radius) {
         ctx.beginPath();
-        ctx.arc(x, y, radius+1, 0, 2 * Math.PI);
+        ctx.arc(x, y, radius + 1, 0, 2 * Math.PI);
         ctx.clip();
         ctx.clearRect(x - radius - 1, y - radius - 1,
             radius * 2 + 2, radius * 2 + 2);
@@ -11584,6 +11625,10 @@ dmf.createModule('renderer', function(c) {
     }
 
     function adjust() {
+        if (!state.ready) {
+            return;
+        }
+
         targetBB = layout.getBoundingBox();
         // current gets 20% closer to target every iteration
         currentBB = {
@@ -11656,7 +11701,7 @@ dmf.createModule('viewer', function(c) {
 
     function nodeCreated(data) {
         addGraphNode(data.node, data.parent);
-        elements.$viewer.trigger('node-selected', data.node.graphNode);
+        elements.$viewer.trigger('node-clicked', data.node.graphNode);
     }
 
     function nodeEdited(node) {
@@ -11676,6 +11721,7 @@ dmf.createModule('viewer', function(c) {
     /************************************ GENERAL FUNCTIONS ************************************/
 
     function wipeGraph() {
+        c.notify('graph-unready');
         if (graph) {
             graph.empty();
         }
@@ -11791,6 +11837,7 @@ dmf.createModule('saver', function(c, config) {
         // raw data from local storage could be pulled in again
         
         c.data.allProjects[c.data.project.projectId] = c.data.project; 
+        
         save();
     }
 

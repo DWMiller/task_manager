@@ -52,11 +52,12 @@ dmf.createModule('node-editor', function(c) {
     /******************************* Framework Listeners **********************/
     function nodeSelected(treeNode) {
         //trigger a save before changing the editor panel content
-        if (selectedNode) {
+        if (selectedNode && selectedNode !== treeNode) {
             updateNode();
         }
 
         selectedNode = treeNode;
+
         updateEditor();
         elements['node-label'].focus();
         elements['node-label'].select();
@@ -92,6 +93,7 @@ dmf.createModule('node-editor', function(c) {
     }
 
     function updateNode() {
+        
         selectedNode.data.label = elements['node-label'].value;
         selectedNode.data.description = elements['node-description'].getData();
         selectedNode.data.status = elements['node-status'].value;

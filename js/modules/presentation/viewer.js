@@ -50,7 +50,7 @@ dmf.createModule('viewer', function(c) {
 
     function nodeCreated(data) {
         addGraphNode(data.node, data.parent);
-        elements.$viewer.trigger('node-selected', data.node.graphNode);
+        elements.$viewer.trigger('node-clicked', data.node.graphNode);
     }
 
     function nodeEdited(node) {
@@ -70,6 +70,7 @@ dmf.createModule('viewer', function(c) {
     /************************************ GENERAL FUNCTIONS ************************************/
 
     function wipeGraph() {
+        c.notify('graph-unready');
         if (graph) {
             graph.empty();
         }
