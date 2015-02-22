@@ -67,7 +67,7 @@ var
 	// Use the correct document accordingly with window argument (sandbox)
 	document = window.document,
 
-	version = "2.1.3",
+	version = "0.1.268",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -10595,6 +10595,9 @@ dmf.createModule('system-server', function(c, config) {
  * @type {Object}
  */
 dmf.extendConfig({
+	globals: {
+		version: '0.1.268'
+	},	
 	saver: {
 		'namespace': 'task_manager_',
 		'id-length': 16
@@ -11057,10 +11060,11 @@ dmf.createModule('menu', function(c) {
 dmf.createModule('node-editor', function(c) {
     'use strict';
 
-    var p_properties = {
+    var properties = {
         id: 'node-editor',
         selector: 'node-editor',
         listeners: {
+            'project-opened': projectOpened,
             'node-selected': nodeSelected
         }
     };
@@ -11068,17 +11072,22 @@ dmf.createModule('node-editor', function(c) {
     var elements = {},
         selectedNode;
 
+    var state = {
+        parentSelectionMode: false
+    };
     /************************************ MODULE INITIALIZATION ************************************/
 
-    function p_initialize(scope) {
+    function initialize() {
 
         CKEDITOR.replace('node-description');
 
         elements = {
+            'editor': document.getElementById('node-editor'),
             'node-data': document.getElementById('node-data'),
             'node-commands': document.getElementById('node-commands'),
             'node-createChild': document.getElementById('node-createChild'),
             'node-delete': document.getElementById('node-delete'),
+            'node-move': document.getElementById('node-move'),
             'node-label': document.getElementById('node-label'),
             'node-description': CKEDITOR.instances['node-description'], // document.getElementById('node-description'),
             'node-status': document.getElementById('node-status'),
@@ -11088,7 +11097,7 @@ dmf.createModule('node-editor', function(c) {
         bindEvents();
     }
 
-    function p_destroy() {
+    function destroy() {
         unbindEvents();
         elements = null;
     }
@@ -11097,16 +11106,39 @@ dmf.createModule('node-editor', function(c) {
         c.dom.listen(elements['node-createChild'], 'click', createChildNode);
         c.dom.listen(elements['node-data'], 'change', updateNode);
         c.dom.listen(elements['node-delete'], 'click', deleteNode);
+        c.dom.listen(elements['node-move'], 'click', startParentSelectionMode);
     }
 
     function unbindEvents() {
         c.dom.ignore(elements['node-createChild'], 'click', createChildNode);
         c.dom.ignore(elements['node-data'], 'change', updateNode);
         c.dom.ignore(elements['node-delete'], 'click', deleteNode);
+        c.dom.ignore(elements['node-move'], 'click', startParentSelectionMode);
     }
 
     /******************************* Framework Listeners **********************/
+
+    function projectOpened() {
+        state.parentSelectionMode = false;
+        elements.editor.className = '';
+    }
+
     function nodeSelected(treeNode) {
+
+        if (state.parentSelectionMode === true) {
+            state.parentSelectionMode = false;
+            deleteNode();
+            treeNode.children.push(selectedNode);
+
+            c.notify({
+                type: 'node-moved',
+                data: {
+                    parent: treeNode,
+                    node: selectedNode
+                }
+            });
+        }
+
         //trigger a save before changing the editor panel content
         if (selectedNode && selectedNode !== treeNode) {
             updateNode();
@@ -11117,9 +11149,18 @@ dmf.createModule('node-editor', function(c) {
         updateEditor();
         elements['node-label'].focus();
         elements['node-label'].select();
+
+        state.parentSelectionMode = false;
+
+        elements.editor.className = 'active';
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
+
+    function startParentSelectionMode() {
+        state.parentSelectionMode = true;
+        elements.editor.className = '';
+    }
 
     function deleteNode() {
         var rootNode = c.data.project.projectTree.rootNode;
@@ -11131,6 +11172,8 @@ dmf.createModule('node-editor', function(c) {
         });
 
         c.notify('data-changed');
+
+        elements.editor.className = '';
     }
 
     /**
@@ -11149,7 +11192,7 @@ dmf.createModule('node-editor', function(c) {
     }
 
     function updateNode() {
-        
+
         selectedNode.data.label = elements['node-label'].value;
         selectedNode.data.description = elements['node-description'].getData();
         selectedNode.data.status = elements['node-status'].value;
@@ -11191,9 +11234,9 @@ dmf.createModule('node-editor', function(c) {
     }
 
     return {
-        properties: p_properties,
-        initialize: p_initialize,
-        destroy: p_destroy,
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
     };
 
 });
@@ -11229,20 +11272,21 @@ dmf.createModule('renderer', function(c) {
             emptyNode: "#E6E9F7",
             selectedNode: "#FFFFE0",
             brokenNode: "#FFFFFF",
-            edge: '#2980b9',
+            edge: '#1abc9c',
             nodes: {
                 incomplete: {
-                    default: '#2980b9',
-                    selected: '#3498db',
+                    default: '#3498db',
+                    selected: '#2980b9',
                 },
                 complete: {
-                    default: '#27ae60',
-                    selected: '#2ecc71',
+                    default: '#2ecc71',
+                    selected: '#27ae60',
                 }
             }
         },
         nodes: {
             radius: 40,
+            borderWidth: 3
         },
         edges: {
             width: 2
@@ -11456,7 +11500,6 @@ dmf.createModule('renderer', function(c) {
         ctx.moveTo(s1.x, s1.y);
         ctx.lineTo(lineEnd.x, lineEnd.y);
         ctx.stroke();
-
     }
 
     function drawNode(node, p) {
@@ -11483,8 +11526,8 @@ dmf.createModule('renderer', function(c) {
             adjustedRadius *= 1.2;
         }
 
-        clearCircle(s.x, s.y, adjustedRadius);
-        drawCircle(s.x, s.y, adjustedRadius);
+        clearCircle(s.x, s.y, adjustedRadius, settings.nodes.borderWidth);
+        drawCircle(s.x, s.y, adjustedRadius, settings.nodes.borderWidth);
 
         var fontSize = settings.font.size + "px "; // + ((treeNode.data.importance || 1) * 1) + "px ";
 
@@ -11499,12 +11542,23 @@ dmf.createModule('renderer', function(c) {
         ctx.restore();
     }
 
-    function drawCircle(x, y, radius) {
+    function clearCircle(x, y, radius, borderWidth) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius + borderWidth, 0, 2 * Math.PI);
+        ctx.clip();
+        ctx.clearRect(x - radius - 1, y - radius - 1,
+            radius * 2 + 2, radius * 2 + 2);
+    }
+
+    function drawCircle(x, y, radius, borderWidth) {
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.fill();
-    }
 
+        ctx.lineWidth = borderWidth;
+        ctx.strokeStyle = '#5D5D5D';
+        ctx.stroke();
+    }
 
     function drawWrappedText(text, x, y, maxWidth) {
         var words = text.split(' ');
@@ -11523,14 +11577,6 @@ dmf.createModule('renderer', function(c) {
             }
         }
         ctx.fillText(line, x, y);
-    }
-
-    function clearCircle(x, y, radius) {
-        ctx.beginPath();
-        ctx.arc(x, y, radius + 1, 0, 2 * Math.PI);
-        ctx.clip();
-        ctx.clearRect(x - radius - 1, y - radius - 1,
-            radius * 2 + 2, radius * 2 + 2);
     }
 
     /************************************ GENERAL FUNCTIONS *******************/
@@ -11660,6 +11706,7 @@ dmf.createModule('viewer', function(c) {
             'node-created': nodeCreated,
             'node-edited': nodeEdited,
             'node-deleted': nodeDeleted,
+            'node-moved': nodeMoved
         }
     };
 
@@ -11670,6 +11717,8 @@ dmf.createModule('viewer', function(c) {
 
     function initialize(scope) {
         elements.$viewer = $(scope.self());
+        elements.version = document.getElementById('version');
+        version.innerHTML = dmf.config.globals.version;
 
         scope.self().width = elements.$viewer.parent().width();
         scope.self().height = elements.$viewer.parent().height();
@@ -11716,6 +11765,12 @@ dmf.createModule('viewer', function(c) {
         // }
 
         graph.removeNode(node.graphNode);
+    }
+
+    function nodeMoved(data) {
+        nodeDeleted(data.node);
+        nodeCreated(data);
+        // update springy parent
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/

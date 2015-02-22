@@ -1,8 +1,8 @@
 {
   "name": "task_manager",
-  "version": "0.1.226",
+  "version": "0.1.268",
   "author": {
-    "nane": "David Miller",
+    "name": "David Miller",
     "email": "david.miller8@mohawkcollege.ca"
   },
   "devDependencies": {

@@ -29,7 +29,7 @@
     z-index: 10;   
 }
 
-[role="navigation"] {
+[role="navigation"],[role="footer"]  {
     @extend %zIndex-10;
 }
 
@@ -40,3 +40,4 @@
 [role="menu"] {
     @extend %zIndex-8;
 }
+

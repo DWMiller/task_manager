@@ -1,10 +1,11 @@
 dmf.createModule('node-editor', function(c) {
     'use strict';
 
-    var p_properties = {
+    var properties = {
         id: 'node-editor',
         selector: 'node-editor',
         listeners: {
+            'project-opened': projectOpened,
             'node-selected': nodeSelected
         }
     };
@@ -12,17 +13,22 @@ dmf.createModule('node-editor', function(c) {
     var elements = {},
         selectedNode;
 
+    var state = {
+        parentSelectionMode: false
+    };
     /************************************ MODULE INITIALIZATION ************************************/
 
-    function p_initialize(scope) {
+    function initialize() {
 
         CKEDITOR.replace('node-description');
 
         elements = {
+            'editor': document.getElementById('node-editor'),
             'node-data': document.getElementById('node-data'),
             'node-commands': document.getElementById('node-commands'),
             'node-createChild': document.getElementById('node-createChild'),
             'node-delete': document.getElementById('node-delete'),
+            'node-move': document.getElementById('node-move'),
             'node-label': document.getElementById('node-label'),
             'node-description': CKEDITOR.instances['node-description'], // document.getElementById('node-description'),
             'node-status': document.getElementById('node-status'),
@@ -32,7 +38,7 @@ dmf.createModule('node-editor', function(c) {
         bindEvents();
     }
 
-    function p_destroy() {
+    function destroy() {
         unbindEvents();
         elements = null;
     }
@@ -41,16 +47,39 @@ dmf.createModule('node-editor', function(c) {
         c.dom.listen(elements['node-createChild'], 'click', createChildNode);
         c.dom.listen(elements['node-data'], 'change', updateNode);
         c.dom.listen(elements['node-delete'], 'click', deleteNode);
+        c.dom.listen(elements['node-move'], 'click', startParentSelectionMode);
     }
 
     function unbindEvents() {
         c.dom.ignore(elements['node-createChild'], 'click', createChildNode);
         c.dom.ignore(elements['node-data'], 'change', updateNode);
         c.dom.ignore(elements['node-delete'], 'click', deleteNode);
+        c.dom.ignore(elements['node-move'], 'click', startParentSelectionMode);
     }
 
     /******************************* Framework Listeners **********************/
+
+    function projectOpened() {
+        state.parentSelectionMode = false;
+        elements.editor.className = '';
+    }
+
     function nodeSelected(treeNode) {
+
+        if (state.parentSelectionMode === true) {
+            state.parentSelectionMode = false;
+            deleteNode();
+            treeNode.children.push(selectedNode);
+
+            c.notify({
+                type: 'node-moved',
+                data: {
+                    parent: treeNode,
+                    node: selectedNode
+                }
+            });
+        }
+
         //trigger a save before changing the editor panel content
         if (selectedNode && selectedNode !== treeNode) {
             updateNode();
@@ -61,9 +90,18 @@ dmf.createModule('node-editor', function(c) {
         updateEditor();
         elements['node-label'].focus();
         elements['node-label'].select();
+
+        state.parentSelectionMode = false;
+
+        elements.editor.className = 'active';
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
+
+    function startParentSelectionMode() {
+        state.parentSelectionMode = true;
+        elements.editor.className = '';
+    }
 
     function deleteNode() {
         var rootNode = c.data.project.projectTree.rootNode;
@@ -75,6 +113,8 @@ dmf.createModule('node-editor', function(c) {
         });
 
         c.notify('data-changed');
+
+        elements.editor.className = '';
     }
 
     /**
@@ -93,7 +133,7 @@ dmf.createModule('node-editor', function(c) {
     }
 
     function updateNode() {
-        
+
         selectedNode.data.label = elements['node-label'].value;
         selectedNode.data.description = elements['node-description'].getData();
         selectedNode.data.status = elements['node-status'].value;
@@ -135,9 +175,9 @@ dmf.createModule('node-editor', function(c) {
     }
 
     return {
-        properties: p_properties,
-        initialize: p_initialize,
-        destroy: p_destroy,
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
     };
 
 });

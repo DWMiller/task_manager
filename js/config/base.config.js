@@ -5,6 +5,9 @@
  * @type {Object}
  */
 dmf.extendConfig({
+	globals: {
+		version: '0'
+	},	
 	saver: {
 		'namespace': 'task_manager_',
 		'id-length': 16

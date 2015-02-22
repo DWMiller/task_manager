@@ -4,6 +4,6 @@ module.exports = {
             // Task-specific options go here.
             release: 'patch'
         },
-        src: ['package.json']
+        src: ['package.json','dist/js/production.js']
     }
 }

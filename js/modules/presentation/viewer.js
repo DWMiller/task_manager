@@ -9,6 +9,7 @@ dmf.createModule('viewer', function(c) {
             'node-created': nodeCreated,
             'node-edited': nodeEdited,
             'node-deleted': nodeDeleted,
+            'node-moved': nodeMoved
         }
     };
 
@@ -19,6 +20,8 @@ dmf.createModule('viewer', function(c) {
 
     function initialize(scope) {
         elements.$viewer = $(scope.self());
+        elements.version = document.getElementById('version');
+        version.innerHTML = dmf.config.globals.version;
 
         scope.self().width = elements.$viewer.parent().width();
         scope.self().height = elements.$viewer.parent().height();
@@ -65,6 +68,12 @@ dmf.createModule('viewer', function(c) {
         // }
 
         graph.removeNode(node.graphNode);
+    }
+
+    function nodeMoved(data) {
+        nodeDeleted(data.node);
+        nodeCreated(data);
+        // update springy parent
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/

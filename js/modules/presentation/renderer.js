@@ -29,20 +29,21 @@ dmf.createModule('renderer', function(c) {
             emptyNode: "#E6E9F7",
             selectedNode: "#FFFFE0",
             brokenNode: "#FFFFFF",
-            edge: '#2980b9',
+            edge: '#1abc9c',
             nodes: {
                 incomplete: {
-                    default: '#2980b9',
-                    selected: '#3498db',
+                    default: '#3498db',
+                    selected: '#2980b9',
                 },
                 complete: {
-                    default: '#27ae60',
-                    selected: '#2ecc71',
+                    default: '#2ecc71',
+                    selected: '#27ae60',
                 }
             }
         },
         nodes: {
             radius: 40,
+            borderWidth: 3
         },
         edges: {
             width: 2
@@ -256,7 +257,6 @@ dmf.createModule('renderer', function(c) {
         ctx.moveTo(s1.x, s1.y);
         ctx.lineTo(lineEnd.x, lineEnd.y);
         ctx.stroke();
-
     }
 
     function drawNode(node, p) {
@@ -283,8 +283,8 @@ dmf.createModule('renderer', function(c) {
             adjustedRadius *= 1.2;
         }
 
-        clearCircle(s.x, s.y, adjustedRadius);
-        drawCircle(s.x, s.y, adjustedRadius);
+        clearCircle(s.x, s.y, adjustedRadius, settings.nodes.borderWidth);
+        drawCircle(s.x, s.y, adjustedRadius, settings.nodes.borderWidth);
 
         var fontSize = settings.font.size + "px "; // + ((treeNode.data.importance || 1) * 1) + "px ";
 
@@ -299,12 +299,23 @@ dmf.createModule('renderer', function(c) {
         ctx.restore();
     }
 
-    function drawCircle(x, y, radius) {
+    function clearCircle(x, y, radius, borderWidth) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius + borderWidth, 0, 2 * Math.PI);
+        ctx.clip();
+        ctx.clearRect(x - radius - 1, y - radius - 1,
+            radius * 2 + 2, radius * 2 + 2);
+    }
+
+    function drawCircle(x, y, radius, borderWidth) {
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.fill();
-    }
 
+        ctx.lineWidth = borderWidth;
+        ctx.strokeStyle = '#5D5D5D';
+        ctx.stroke();
+    }
 
     function drawWrappedText(text, x, y, maxWidth) {
         var words = text.split(' ');
@@ -323,14 +334,6 @@ dmf.createModule('renderer', function(c) {
             }
         }
         ctx.fillText(line, x, y);
-    }
-
-    function clearCircle(x, y, radius) {
-        ctx.beginPath();
-        ctx.arc(x, y, radius + 1, 0, 2 * Math.PI);
-        ctx.clip();
-        ctx.clearRect(x - radius - 1, y - radius - 1,
-            radius * 2 + 2, radius * 2 + 2);
     }
 
     /************************************ GENERAL FUNCTIONS *******************/

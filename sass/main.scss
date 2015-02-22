@@ -25,8 +25,9 @@
  * typically identified by id
  */
 
+@import 'modules/footer';
 @import 'modules/main';
-@import 'modules/viewer';
-@import 'modules/nav';
 @import 'modules/menu';
+@import 'modules/nav';
 @import 'modules/node-editor';
+@import 'modules/viewer';

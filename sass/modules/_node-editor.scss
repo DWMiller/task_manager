@@ -2,11 +2,13 @@
     @extend .shadow-sm;
     position: absolute;
     background: rgba($outsmart-dark, 0.6);
-    // * {
-    //     opacity: 0.85;
-    // }
+    transition: left 1s;
+    width: 400px;
     top: 2em;
-    left: 0;
+    left: -400px;
+    &.active {
+        left: 0;
+    }
     textarea {
         min-width: 90%;
         min-height: 5em;
