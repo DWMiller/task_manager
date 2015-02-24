@@ -2,6 +2,10 @@
     margin: auto;
     position: absolute;
     right: 45%;
+    &:focus {
+        background-color: white;
+        padding: 0.5em 1em;
+    }
 }
 #viewer {
     width: 100%;
