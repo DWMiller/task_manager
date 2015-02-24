@@ -67,7 +67,7 @@ var
 	// Use the correct document accordingly with window argument (sandbox)
 	document = window.document,
 
-	version = "0.1.268",
+	version = "0.1.274",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -10596,7 +10596,7 @@ dmf.createModule('system-server', function(c, config) {
  */
 dmf.extendConfig({
 	globals: {
-		version: '0.1.268'
+		version: '0.1.274'
 	},	
 	saver: {
 		'namespace': 'task_manager_',
