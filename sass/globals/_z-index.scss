@@ -26,18 +26,20 @@
     z-index: 9;
 }
 %zIndex-10 {
-    z-index: 10;   
+    z-index: 10;
 }
-
-[role="navigation"],[role="footer"]  {
+[role="navigation"], [role="footer"] {
     @extend %zIndex-10;
 }
-
 [role="main"] {
     @extend %zIndex-9;
 }
-
 [role="menu"] {
     @extend %zIndex-8;
 }
-
+#node-editor {
+    @extend %zIndex-7;
+}
+#project-name {
+    @extend %zIndex-6;
+}

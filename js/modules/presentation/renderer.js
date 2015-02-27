@@ -126,7 +126,7 @@ dmf.createModule('renderer', function(c) {
     /************************************ UI Handlers *************************/
 
     function mousedown(e) {
-        var pos = jQuery(event.target).offset();
+        var pos = jQuery(e.target).offset();
         var p = fromScreen({
             x: e.pageX - pos.left,
             y: e.pageY - pos.top
@@ -154,7 +154,7 @@ dmf.createModule('renderer', function(c) {
     }
 
     function mousemove(e) {
-        var pos = jQuery(event.target).offset();
+        var pos = jQuery(e.target).offset();
 
         var p = fromScreen({
             x: e.pageX - pos.left,

@@ -19,21 +19,26 @@ dmf.createModule('node-editor', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function initialize() {
-
-        CKEDITOR.replace('node-description');
-
         elements = {
             'editor': document.getElementById('node-editor'),
+            'hide': document.getElementById('editor-hide'),
             'node-data': document.getElementById('node-data'),
             'node-commands': document.getElementById('node-commands'),
             'node-createChild': document.getElementById('node-createChild'),
             'node-delete': document.getElementById('node-delete'),
             'node-move': document.getElementById('node-move'),
             'node-label': document.getElementById('node-label'),
-            'node-description': CKEDITOR.instances['node-description'], // document.getElementById('node-description'),
+            'node-description': new Quill('#node-description--editor', {
+                theme: 'snow'
+            }),
+
             'node-status': document.getElementById('node-status'),
             'node-importance': document.getElementById('node-importance'),
         };
+
+        elements['node-description'].addModule('toolbar', {
+            container: '#node-description--toolbar'
+        });
 
         bindEvents();
     }
@@ -48,6 +53,7 @@ dmf.createModule('node-editor', function(c) {
         c.dom.listen(elements['node-data'], 'change', updateNode);
         c.dom.listen(elements['node-delete'], 'click', deleteNode);
         c.dom.listen(elements['node-move'], 'click', startParentSelectionMode);
+        c.dom.listen(elements.hide, 'click', hideEditor);
     }
 
     function unbindEvents() {
@@ -55,13 +61,14 @@ dmf.createModule('node-editor', function(c) {
         c.dom.ignore(elements['node-data'], 'change', updateNode);
         c.dom.ignore(elements['node-delete'], 'click', deleteNode);
         c.dom.ignore(elements['node-move'], 'click', startParentSelectionMode);
+        c.dom.ignore(elements.hide, 'click', hideEditor);
     }
 
     /******************************* Framework Listeners **********************/
 
     function projectOpened() {
         state.parentSelectionMode = false;
-        elements.editor.className = '';
+        hideEditor();
     }
 
     function nodeSelected(treeNode) {
@@ -98,6 +105,10 @@ dmf.createModule('node-editor', function(c) {
 
     /************************************ GENERAL FUNCTIONS ************************************/
 
+    function hideEditor() {
+        elements.editor.className = '';
+    }
+
     function startParentSelectionMode() {
         state.parentSelectionMode = true;
         elements.editor.className = '';
@@ -114,7 +125,7 @@ dmf.createModule('node-editor', function(c) {
 
         c.notify('data-changed');
 
-        elements.editor.className = '';
+        hideEditor();
     }
 
     /**
@@ -135,7 +146,7 @@ dmf.createModule('node-editor', function(c) {
     function updateNode() {
 
         selectedNode.data.label = elements['node-label'].value;
-        selectedNode.data.description = elements['node-description'].getData();
+        selectedNode.data.description = elements['node-description'].getHTML();
         selectedNode.data.status = elements['node-status'].value;
         selectedNode.data.importance = elements['node-importance'].value;
 
@@ -149,7 +160,7 @@ dmf.createModule('node-editor', function(c) {
 
     function updateEditor() {
         elements['node-label'].value = selectedNode.data.label;
-        elements['node-description'].setData(selectedNode.data.description);
+        elements['node-description'].setHTML(selectedNode.data.description);
         elements['node-status'].value = selectedNode.data.status;
         elements['node-importance'].value = selectedNode.data.importance || 1;
     }
