@@ -67,7 +67,7 @@ var
 	// Use the correct document accordingly with window argument (sandbox)
 	document = window.document,
 
-	version = "0.1.323",
+	version = "0.1.333",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -13240,7 +13240,7 @@ diff.EQUAL = DIFF_EQUAL;
 module.exports = diff;
 
 },{}],7:[function(_dereq_,module,exports){
-module.exports={"version":"0.1.323"}
+module.exports={"version":"0.1.333"}
 },{}],8:[function(_dereq_,module,exports){
 var Delta, Document, Format, Line, LinkedList, Normalizer, dom, _;
 
@@ -19005,7 +19005,7 @@ dmf.createModule('system-server', function(c, config) {
  */
 dmf.extendConfig({
 	globals: {
-		version: '0.1.323'
+		version: '0.1.333'
 	},	
 	saver: {
 		'namespace': 'task_manager_',
@@ -19689,18 +19689,17 @@ dmf.createModule('renderer', function(c) {
         },
         colours: {
             font: "#000000",
-            emptyNode: "#E6E9F7",
-            selectedNode: "#FFFFE0",
-            brokenNode: "#FFFFFF",
-            edge: '#1abc9c',
+            edge: '#8E44AD',
             nodes: {
                 incomplete: {
-                    default: '#3498db',
-                    selected: '#2980b9',
+                    default: '#F39C12',
+                    selected: '#E67E22',
+                    border: '#BDC3C7',
                 },
                 complete: {
                     default: '#2ecc71',
                     selected: '#27ae60',
+                    border: '#BDC3C7',
                 }
             }
         },
@@ -19938,6 +19937,7 @@ dmf.createModule('renderer', function(c) {
         var variant = isSelected ? 'selected' : 'default';
 
         ctx.fillStyle = settings.colours.nodes[treeNode.data.status][variant];
+        ctx.strokeStyle = settings.colours.nodes[treeNode.data.status].border;
 
         var adjustedRadius = settings.nodes.radius + ((treeNode.data.importance || 1) * 2);
 
@@ -19976,7 +19976,7 @@ dmf.createModule('renderer', function(c) {
         ctx.fill();
 
         ctx.lineWidth = borderWidth;
-        ctx.strokeStyle = '#5D5D5D';
+
         ctx.stroke();
     }
 

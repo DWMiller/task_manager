@@ -19,6 +19,7 @@
     }
     .editor {
         min-height: 5em;
+        max-height: 20em;
     }
 }
 @media only screen and (max-width: $sm-brkp) {

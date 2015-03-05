@@ -26,18 +26,17 @@ dmf.createModule('renderer', function(c) {
         },
         colours: {
             font: "#000000",
-            emptyNode: "#E6E9F7",
-            selectedNode: "#FFFFE0",
-            brokenNode: "#FFFFFF",
-            edge: '#1abc9c',
+            edge: '#8E44AD',
             nodes: {
                 incomplete: {
-                    default: '#3498db',
-                    selected: '#2980b9',
+                    default: '#F39C12',
+                    selected: '#E67E22',
+                    border: '#BDC3C7',
                 },
                 complete: {
                     default: '#2ecc71',
                     selected: '#27ae60',
+                    border: '#BDC3C7',
                 }
             }
         },
@@ -275,6 +274,7 @@ dmf.createModule('renderer', function(c) {
         var variant = isSelected ? 'selected' : 'default';
 
         ctx.fillStyle = settings.colours.nodes[treeNode.data.status][variant];
+        ctx.strokeStyle = settings.colours.nodes[treeNode.data.status].border;
 
         var adjustedRadius = settings.nodes.radius + ((treeNode.data.importance || 1) * 2);
 
@@ -313,7 +313,7 @@ dmf.createModule('renderer', function(c) {
         ctx.fill();
 
         ctx.lineWidth = borderWidth;
-        ctx.strokeStyle = '#5D5D5D';
+
         ctx.stroke();
     }
 
