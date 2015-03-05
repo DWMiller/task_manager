@@ -109,6 +109,11 @@ dmf.createModule('renderer', function(c) {
         nearest = layout.nearest(p);
 
         if (nearest.distance > maxSelectionDistance) {
+            if (selected) {
+                selected = null;
+                c.notify('node-deselected');
+            }
+
             return;
         }
 
