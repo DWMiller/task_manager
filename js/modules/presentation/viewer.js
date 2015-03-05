@@ -19,12 +19,12 @@ dmf.createModule('viewer', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function initialize(scope) {
-        elements.$viewer = $(scope.self());
+        elements.canvas = document.getElementById('viewer');
+        elements.$viewer = $(elements.canvas);
         elements.version = document.getElementById('version');
         version.innerHTML = dmf.config.globals.version;
 
-        scope.self().width = elements.$viewer.parent().width();
-        scope.self().height = elements.$viewer.parent().height();
+        setCanvasSize();
 
         bindEvents();
         c.startModule('renderer');
@@ -38,10 +38,17 @@ dmf.createModule('viewer', function(c) {
 
     function bindEvents() {
         // c.dom.listen(elements['menu-toggle'], 'click', toggleMenu);
+        window.onresize = function() {
+            c.notify('graph-unready');
+            setCanvasSize();
+            renderGraph();
+        };
+
     }
 
     function unbindEvents() {
         // c.dom.ignore(elements['menu-toggle'], 'click', toggleMenu);
+        window.onresize = null;
     }
 
     /******************************* Framework Listeners **********************/
@@ -77,6 +84,12 @@ dmf.createModule('viewer', function(c) {
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
+
+    function setCanvasSize() {
+
+        elements.canvas.width = elements.$viewer.parent().width();
+        elements.canvas.height = elements.$viewer.parent().height();
+    }
 
     function wipeGraph() {
         c.notify('graph-unready');

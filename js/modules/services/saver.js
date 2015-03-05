@@ -69,7 +69,7 @@ dmf.createModule('saver', function(c, config) {
     function save() {
         c.data.project.version = dmf.config.globals.version;
         localStorage.setItem(c.data.project.projectId, JSON.stringify(c.data.project));
-        console.log('saved to local storage', c.data.project);
+        // console.log('saved to local storage', c.data.project);
         c.notify('project-saved');
     }
 

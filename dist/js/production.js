@@ -67,7 +67,7 @@ var
 	// Use the correct document accordingly with window argument (sandbox)
 	document = window.document,
 
-	version = "0.1.357",
+	version = "0.1.368",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -13240,7 +13240,7 @@ diff.EQUAL = DIFF_EQUAL;
 module.exports = diff;
 
 },{}],7:[function(_dereq_,module,exports){
-module.exports={"version":"0.1.357"}
+module.exports={"version":"0.1.368"}
 },{}],8:[function(_dereq_,module,exports){
 var Delta, Document, Format, Line, LinkedList, Normalizer, dom, _;
 
@@ -19005,7 +19005,7 @@ dmf.createModule('system-server', function(c, config) {
  */
 dmf.extendConfig({
 	globals: {
-		version: '0.1.357'
+		version: '0.1.368'
 	},	
 	saver: {
 		'namespace': 'task_manager_',
@@ -20133,12 +20133,12 @@ dmf.createModule('viewer', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function initialize(scope) {
-        elements.$viewer = $(scope.self());
+        elements.canvas = document.getElementById('viewer');
+        elements.$viewer = $(elements.canvas);
         elements.version = document.getElementById('version');
         version.innerHTML = dmf.config.globals.version;
 
-        scope.self().width = elements.$viewer.parent().width();
-        scope.self().height = elements.$viewer.parent().height();
+        setCanvasSize();
 
         bindEvents();
         c.startModule('renderer');
@@ -20152,10 +20152,17 @@ dmf.createModule('viewer', function(c) {
 
     function bindEvents() {
         // c.dom.listen(elements['menu-toggle'], 'click', toggleMenu);
+        window.onresize = function() {
+            c.notify('graph-unready');
+            setCanvasSize();
+            renderGraph();
+        };
+
     }
 
     function unbindEvents() {
         // c.dom.ignore(elements['menu-toggle'], 'click', toggleMenu);
+        window.onresize = null;
     }
 
     /******************************* Framework Listeners **********************/
@@ -20191,6 +20198,12 @@ dmf.createModule('viewer', function(c) {
     }
 
     /************************************ GENERAL FUNCTIONS ************************************/
+
+    function setCanvasSize() {
+
+        elements.canvas.width = elements.$viewer.parent().width();
+        elements.canvas.height = elements.$viewer.parent().height();
+    }
 
     function wipeGraph() {
         c.notify('graph-unready');
@@ -20416,7 +20429,7 @@ dmf.createModule('saver', function(c, config) {
     function save() {
         c.data.project.version = dmf.config.globals.version;
         localStorage.setItem(c.data.project.projectId, JSON.stringify(c.data.project));
-        console.log('saved to local storage', c.data.project);
+        // console.log('saved to local storage', c.data.project);
         c.notify('project-saved');
     }
 
