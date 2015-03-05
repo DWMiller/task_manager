@@ -87,27 +87,7 @@ dmf.createModule('menu-load', function(c) {
 
         c.data.project = projectData;
 
-        if (!c.data.project.settings) {
-            //This is temporary to ensure old projects get their data format updated
-            c.data.project.settings = {
-                colours: {
-                    font: "#000000",
-                    edge: '#8E44AD',
-                    nodes: {
-                        incomplete: {
-                            default: '#F39C12',
-                            selected: '#E67E22',
-                            border: '#BDC3C7',
-                        },
-                        complete: {
-                            default: '#2ecc71',
-                            selected: '#27ae60',
-                            border: '#BDC3C7',
-                        }
-                    }
-                },
-            };
-        }
+        c.notify('compatibility-check');
 
         localStorage.setItem('last-opened', projectId);
         c.notify('project-opened');

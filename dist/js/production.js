@@ -67,7 +67,7 @@ var
 	// Use the correct document accordingly with window argument (sandbox)
 	document = window.document,
 
-	version = "0.1.341",
+	version = "0.1.345",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -13240,7 +13240,7 @@ diff.EQUAL = DIFF_EQUAL;
 module.exports = diff;
 
 },{}],7:[function(_dereq_,module,exports){
-module.exports={"version":"0.1.341"}
+module.exports={"version":"0.1.345"}
 },{}],8:[function(_dereq_,module,exports){
 var Delta, Document, Format, Line, LinkedList, Normalizer, dom, _;
 
@@ -19005,7 +19005,7 @@ dmf.createModule('system-server', function(c, config) {
  */
 dmf.extendConfig({
 	globals: {
-		version: '0.1.341'
+		version: '0.1.345'
 	},	
 	saver: {
 		'namespace': 'task_manager_',
@@ -19161,7 +19161,8 @@ dmf.createModule('controller', function(c, config) {
     }
 
     function startup() {
-        c.startModules(['menu',
+        c.startModules(['compatibility',
+            'menu',
             'viewer',
             'menu-load',
             'menu-project',
@@ -19175,7 +19176,8 @@ dmf.createModule('controller', function(c, config) {
 
     function shutdown() {
 
-        c.stopModules(['menu',
+        c.stopModules(['compatibility',
+            'menu',
             'menu-load',
             'menu-project',
             'loader',
@@ -19287,27 +19289,7 @@ dmf.createModule('menu-load', function(c) {
 
         c.data.project = projectData;
 
-        if (!c.data.project.settings) {
-            //This is temporary to ensure old projects get their data format updated
-            c.data.project.settings = {
-                colours: {
-                    font: "#000000",
-                    edge: '#8E44AD',
-                    nodes: {
-                        incomplete: {
-                            default: '#F39C12',
-                            selected: '#E67E22',
-                            border: '#BDC3C7',
-                        },
-                        complete: {
-                            default: '#2ecc71',
-                            selected: '#27ae60',
-                            border: '#BDC3C7',
-                        }
-                    }
-                },
-            };
-        }
+        c.notify('compatibility-check');
 
         localStorage.setItem('last-opened', projectId);
         c.notify('project-opened');
@@ -20251,6 +20233,59 @@ dmf.createModule('viewer', function(c) {
             });
         }
     }
+
+    return {
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
+    };
+
+});
+
+dmf.createModule('compatibility', function(c, config) {
+    'use strict';
+
+    var properties = {
+        id: 'compatibility',
+        listeners: {
+            'compatibility-check': compatibilityCheck
+        }
+    };
+
+    /************************************ MODULE INITIALIZATION ************************************/
+
+    function initialize() {}
+
+    function destroy() {}
+
+    /******************************* Framework Listeners **********************/
+
+    function compatibilityCheck() {
+        if (!c.data.project.settings) {
+            //This is temporary to ensure old projects get their data format updated
+            c.data.project.settings = {
+                colours: {
+                    font: "#000000",
+                    edge: '#8E44AD',
+                    nodes: {
+                        incomplete: {
+                            default: '#F39C12',
+                            selected: '#E67E22',
+                            border: '#BDC3C7',
+                        },
+                        complete: {
+                            default: '#2ecc71',
+                            selected: '#27ae60',
+                            border: '#BDC3C7',
+                        }
+                    }
+                },
+            };
+        }
+    }
+
+    /************************************ GENERAL FUNCTIONS ************************************/
+
 
     return {
         properties: properties,

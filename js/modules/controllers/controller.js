@@ -19,7 +19,8 @@ dmf.createModule('controller', function(c, config) {
     }
 
     function startup() {
-        c.startModules(['menu',
+        c.startModules(['compatibility',
+            'menu',
             'viewer',
             'menu-load',
             'menu-project',
@@ -33,7 +34,8 @@ dmf.createModule('controller', function(c, config) {
 
     function shutdown() {
 
-        c.stopModules(['menu',
+        c.stopModules(['compatibility',
+            'menu',
             'menu-load',
             'menu-project',
             'loader',
