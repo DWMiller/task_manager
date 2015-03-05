@@ -6,7 +6,8 @@ dmf.createModule('node-editor', function(c) {
         selector: 'node-editor',
         listeners: {
             'project-opened': projectOpened,
-            'node-selected': nodeSelected
+            'node-selected': nodeSelected,
+            'node-deselected': hideEditor
         }
     };
 
