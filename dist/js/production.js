@@ -67,7 +67,7 @@ var
 	// Use the correct document accordingly with window argument (sandbox)
 	document = window.document,
 
-	version = "0.1.376",
+	version = "0.1.381",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -14375,7 +14375,7 @@ diff.EQUAL = DIFF_EQUAL;
 module.exports = diff;
 
 },{}],7:[function(_dereq_,module,exports){
-module.exports={"version":"0.1.376"}
+module.exports={"version":"0.1.381"}
 },{}],8:[function(_dereq_,module,exports){
 var Delta, Document, Format, Line, LinkedList, Normalizer, dom, _;
 
@@ -20140,7 +20140,7 @@ dmf.createModule('system-server', function(c, config) {
  */
 dmf.extendConfig({
 	globals: {
-		version: '0.1.376'
+		version: '0.1.381'
 	},	
 	saver: {
 		'namespace': 'task_manager_',
@@ -20457,7 +20457,8 @@ dmf.createModule('menu-project', function(c) {
     /************************************ MODULE INITIALIZATION ************************************/
 
     function p_initialize(scope) {
-        elements['project-name'] = document.getElementById('project-name');        
+        elements['project-name'] = document.getElementById('project-name');
+        elements['colour-picker'] = document.getElementById('colour-picker');
         bindEvents();
     }
 
@@ -20467,11 +20468,13 @@ dmf.createModule('menu-project', function(c) {
     }
 
     function bindEvents() {
-        c.dom.listen(elements['project-name'],'blur', nameChange);
+        c.dom.listen(elements['project-name'], 'blur', nameChange);
+        c.dom.listen(elements['colour-picker'], 'change', colourChange);
     }
 
     function unbindEvents() {
-        c.dom.listen(elements['project-name'],'blur', nameChange);
+        c.dom.ignore(elements['project-name'], 'blur', nameChange);
+        c.dom.ignore(elements['colour-picker'], 'change', colourChange);
     }
 
     /******************************* Framework Listeners **********************/
@@ -20484,6 +20487,11 @@ dmf.createModule('menu-project', function(c) {
 
     function nameChange(event) {
         c.data.project.projectName = elements['project-name'].innerHTML;
+        c.notify('data-changed');
+    }
+
+    function colourChange(e) {
+        c.data.project.settings.colours.nodes.complete.default = '#' + e.target.value;
         c.notify('data-changed');
     }
 
