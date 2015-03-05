@@ -50,7 +50,7 @@ dmf.createModule('menu-load', function(c) {
             addProjectToList(c.data.allProjects[project]);
         }
 
-        if(c.data.project) {
+        if (c.data.project) {
             // don't bother opening last project if a project is already open
             // only for first load
             return;
@@ -74,18 +74,40 @@ dmf.createModule('menu-load', function(c) {
     function projectOpen(event) {
         var selectedIndex = elements['project-list'].selectedIndex;
         var projectId = elements['project-list'][selectedIndex].value;
-        
+
         // c.data.project = c.data.allProjects[projectId];
-        
+
         var projectData = JSON.parse(localStorage.getItem(projectId));
         var treeData = projectData.projectTree;
 
         var newTree = new dmf.classes.Tree();
-        newTree.rootNode = new dmf.classes.TreeNode(newTree,treeData);
+        newTree.rootNode = new dmf.classes.TreeNode(newTree, treeData);
 
         projectData.projectTree = newTree;
 
         c.data.project = projectData;
+
+        if (!c.data.project.settings) {
+            //This is temporary to ensure old projects get their data format updated
+            c.data.project.settings = {
+                colours: {
+                    font: "#000000",
+                    edge: '#8E44AD',
+                    nodes: {
+                        incomplete: {
+                            default: '#F39C12',
+                            selected: '#E67E22',
+                            border: '#BDC3C7',
+                        },
+                        complete: {
+                            default: '#2ecc71',
+                            selected: '#27ae60',
+                            border: '#BDC3C7',
+                        }
+                    }
+                },
+            };
+        }
 
         localStorage.setItem('last-opened', projectId);
         c.notify('project-opened');

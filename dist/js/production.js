@@ -67,7 +67,7 @@ var
 	// Use the correct document accordingly with window argument (sandbox)
 	document = window.document,
 
-	version = "0.1.333",
+	version = "0.1.341",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -13240,7 +13240,7 @@ diff.EQUAL = DIFF_EQUAL;
 module.exports = diff;
 
 },{}],7:[function(_dereq_,module,exports){
-module.exports={"version":"0.1.333"}
+module.exports={"version":"0.1.341"}
 },{}],8:[function(_dereq_,module,exports){
 var Delta, Document, Format, Line, LinkedList, Normalizer, dom, _;
 
@@ -19005,7 +19005,7 @@ dmf.createModule('system-server', function(c, config) {
  */
 dmf.extendConfig({
 	globals: {
-		version: '0.1.333'
+		version: '0.1.341'
 	},	
 	saver: {
 		'namespace': 'task_manager_',
@@ -19250,7 +19250,7 @@ dmf.createModule('menu-load', function(c) {
             addProjectToList(c.data.allProjects[project]);
         }
 
-        if(c.data.project) {
+        if (c.data.project) {
             // don't bother opening last project if a project is already open
             // only for first load
             return;
@@ -19274,18 +19274,40 @@ dmf.createModule('menu-load', function(c) {
     function projectOpen(event) {
         var selectedIndex = elements['project-list'].selectedIndex;
         var projectId = elements['project-list'][selectedIndex].value;
-        
+
         // c.data.project = c.data.allProjects[projectId];
-        
+
         var projectData = JSON.parse(localStorage.getItem(projectId));
         var treeData = projectData.projectTree;
 
         var newTree = new dmf.classes.Tree();
-        newTree.rootNode = new dmf.classes.TreeNode(newTree,treeData);
+        newTree.rootNode = new dmf.classes.TreeNode(newTree, treeData);
 
         projectData.projectTree = newTree;
 
         c.data.project = projectData;
+
+        if (!c.data.project.settings) {
+            //This is temporary to ensure old projects get their data format updated
+            c.data.project.settings = {
+                colours: {
+                    font: "#000000",
+                    edge: '#8E44AD',
+                    nodes: {
+                        incomplete: {
+                            default: '#F39C12',
+                            selected: '#E67E22',
+                            border: '#BDC3C7',
+                        },
+                        complete: {
+                            default: '#2ecc71',
+                            selected: '#27ae60',
+                            border: '#BDC3C7',
+                        }
+                    }
+                },
+            };
+        }
 
         localStorage.setItem('last-opened', projectId);
         c.notify('project-opened');
@@ -19687,22 +19709,22 @@ dmf.createModule('renderer', function(c) {
             size: 12,
             face: "Open-sans, Verdana, sans-serif"
         },
-        colours: {
-            font: "#000000",
-            edge: '#8E44AD',
-            nodes: {
-                incomplete: {
-                    default: '#F39C12',
-                    selected: '#E67E22',
-                    border: '#BDC3C7',
-                },
-                complete: {
-                    default: '#2ecc71',
-                    selected: '#27ae60',
-                    border: '#BDC3C7',
-                }
-            }
-        },
+        // colours: {
+        //     font: "#000000",
+        //     edge: '#8E44AD',
+        //     nodes: {
+        //         incomplete: {
+        //             default: '#F39C12',
+        //             selected: '#E67E22',
+        //             border: '#BDC3C7',
+        //         },
+        //         complete: {
+        //             default: '#2ecc71',
+        //             selected: '#27ae60',
+        //             border: '#BDC3C7',
+        //         }
+        //     }
+        // },
         nodes: {
             radius: 40,
             borderWidth: 3
@@ -19914,7 +19936,7 @@ dmf.createModule('renderer', function(c) {
         // line
         var lineEnd = s2;
 
-        ctx.strokeStyle = settings.colours.edge;
+        ctx.strokeStyle = c.data.project.settings.colours.edge;
         ctx.beginPath();
         ctx.moveTo(s1.x, s1.y);
         ctx.lineTo(lineEnd.x, lineEnd.y);
@@ -19936,8 +19958,8 @@ dmf.createModule('renderer', function(c) {
 
         var variant = isSelected ? 'selected' : 'default';
 
-        ctx.fillStyle = settings.colours.nodes[treeNode.data.status][variant];
-        ctx.strokeStyle = settings.colours.nodes[treeNode.data.status].border;
+        ctx.fillStyle = c.data.project.settings.colours.nodes[treeNode.data.status][variant];
+        ctx.strokeStyle = c.data.project.settings.colours.nodes[treeNode.data.status].border;
 
         var adjustedRadius = settings.nodes.radius + ((treeNode.data.importance || 1) * 2);
 
@@ -19954,7 +19976,7 @@ dmf.createModule('renderer', function(c) {
         ctx.textAlign = "center";
         // ctx.textBaseline = "middle";
         ctx.font = fontSize + settings.font.face;
-        ctx.fillStyle = settings.colours.font;
+        ctx.fillStyle = c.data.project.settings.colours.font;
         var text = node.data.label;
 
         drawWrappedText(text, s.x, s.y - settings.font.size, adjustedRadius * 2);
@@ -20305,14 +20327,14 @@ dmf.createModule('saver', function(c, config) {
     }
 
     function dataChanged() {
-         console.log('Change detected', c.data.project);
+        console.log('Change detected', c.data.project);
 
         // might not be needed to update location in all projects, 
         // only relevant when switching between projects, at which point
         // raw data from local storage could be pulled in again
-        
-        c.data.allProjects[c.data.project.projectId] = c.data.project; 
-        
+
+        c.data.allProjects[c.data.project.projectId] = c.data.project;
+
         save();
     }
 
@@ -20323,7 +20345,25 @@ dmf.createModule('saver', function(c, config) {
             activated: false,
             projectId: config.namespace + dmf.fn.uniqueIndex(config['id-length']),
             projectName: 'Unnamed Project',
-            projectTree: new dmf.classes.Tree()
+            projectTree: new dmf.classes.Tree(),
+            settings: {
+                colours: {
+                    font: "#000000",
+                    edge: '#8E44AD',
+                    nodes: {
+                        incomplete: {
+                            default: '#F39C12',
+                            selected: '#E67E22',
+                            border: '#BDC3C7',
+                        },
+                        complete: {
+                            default: '#2ecc71',
+                            selected: '#27ae60',
+                            border: '#BDC3C7',
+                        }
+                    }
+                },
+            }
         };
 
         var rootNode = new dmf.classes.TreeNode(c.data.project.projectTree);
