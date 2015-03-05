@@ -88,17 +88,23 @@
 
                             </div>
                             <div class="input-group">
-
+                                <label for="node-type">Type</label>
+                                <select name="" id="node-type">
+                                    <option>Select Type</option>
+                                    <option value="grouping">Grouping</option>
+                                    <option value="content">Content</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
                                 <label for="node-status">Status</label>
                                 <select name="" id="node-status">
                                     <option>Select Status</option>
                                     <option value="complete">complete</option>
                                     <option value="incomplete">incomplete</option>
-
                                 </select>
                             </div>
                             <div class="input-group">
-                                <label for="node-status">Importance</label>
+                                <label for="node-importance">Importance</label>
                                 <input id="node-importance" type="number" min="1" max="10">
                             </div>
                         </fieldset>
@@ -125,28 +131,15 @@
             </header>
 
             <section>
-                <form id="menu-project">
-                    <fieldset>
-                        <legend>Project Settings</legend>
+                <header>
+                    <h3>Manage Projects</h3>
+                </header>
 
-                        <!--                         <div class="input-group">
-                            <label for="project-name">Project Name</label>
-                            <input name="project-name" id="project-name" type="text" value="">
-                        </div> -->
-
-                    </fieldset>
-                </form>
-            </section>
-
-            <section>
                 <form id="menu-load">
                     <select name="existing-projects" size="4" id="existing-projects"></select>
                     <!-- <button id="project-open" class="button raised blue">Load Project</button> -->
                 </form>
 
-            </section>
-
-            <section>
                 <button id="project-create" class="button raised blue">Create New Project</button>
 
                 <button id="project-export" class="button raised blue">Export Project</button>
@@ -155,6 +148,41 @@
                 <input type="file" id="project-import">
                 <!-- <button id="project-import" class="button raised blue"> Import Project</button> -->
             </section>
+
+            <section>
+                <header>
+                    <h2>Project Settings</h2>
+                </header>
+
+                <form id="menu-project">
+                    <fieldset>
+                        <legend>Manage Node Status's</legend>
+                        <div class="input-group">
+                            <label for=""></label>
+                            <select name="" id="">
+                                <option>Select Status</option>
+                                <option value="complete">complete</option>
+                                <option value="incomplete">incomplete</option>
+                            </select>
+                            <button>Add</button>
+                            <button>Remove</button>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <div class="input-group">
+                            <label for="">Name</label>
+                            <input id="" type="text" value="">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="">Colour</label>
+                            <input class="color">
+                        </div>
+
+                    </fieldset>
+                </form>
+            </section>
+
         </div>
 
         <footer role="footer">
