@@ -7,7 +7,6 @@ dmf.createModule('renderer', function(c) {
         listeners: {
             'graph-ready': startRendering,
             'graph-unready': stopRendering,
-
         }
     };
 
@@ -19,36 +18,9 @@ dmf.createModule('renderer', function(c) {
     var damping = 0.5;
     var minEnergyThreshold = 0.00001;
 
-    var settings = {
-        font: {
-            size: 12,
-            face: "Open-sans, Verdana, sans-serif"
-        },
-        // colours: {
-        //     font: "#000000",
-        //     edge: '#8E44AD',
-        //     nodes: {
-        //         incomplete: {
-        //             default: '#F39C12',
-        //             selected: '#E67E22',
-        //             border: '#BDC3C7',
-        //         },
-        //         complete: {
-        //             default: '#2ecc71',
-        //             selected: '#27ae60',
-        //             border: '#BDC3C7',
-        //         }
-        //     }
-        // },
-        nodes: {
-            radius: 40,
-            borderWidth: 3
-        },
-        edges: {
-            width: 2
-        }
+    var maxSelectionDistance = 2; //maximum distance a click may be from a node to trigger a selection
 
-    };
+    var settings;
 
     var ctx, layout, currentBB, targetBB, renderer;
 
@@ -91,6 +63,9 @@ dmf.createModule('renderer', function(c) {
     function startRendering(data) {
         unbindEvents();
         bindEvents();
+
+        settings = c.data.project.settings;
+
         state.ready = true;
 
         graph = data.graph;
@@ -130,7 +105,16 @@ dmf.createModule('renderer', function(c) {
             x: e.pageX - pos.left,
             y: e.pageY - pos.top
         });
-        selected = nearest = dragged = layout.nearest(p);
+
+        nearest = layout.nearest(p);
+
+        if (nearest.distance > maxSelectionDistance) {
+            return;
+        }
+
+        selected = dragged = nearest;
+
+        console.log(selected);
 
         if (selected.node !== null) {
             dragged.point.m = 10000.0;
@@ -251,7 +235,7 @@ dmf.createModule('renderer', function(c) {
         // line
         var lineEnd = s2;
 
-        ctx.strokeStyle = c.data.project.settings.colours.edge;
+        ctx.strokeStyle = settings.colours.edge;
         ctx.beginPath();
         ctx.moveTo(s1.x, s1.y);
         ctx.lineTo(lineEnd.x, lineEnd.y);
@@ -273,8 +257,8 @@ dmf.createModule('renderer', function(c) {
 
         var variant = isSelected ? 'selected' : 'default';
 
-        ctx.fillStyle = c.data.project.settings.colours.nodes[treeNode.data.status][variant];
-        ctx.strokeStyle = c.data.project.settings.colours.nodes[treeNode.data.status].border;
+        ctx.fillStyle = settings.colours.nodes[treeNode.data.status][variant];
+        ctx.strokeStyle = settings.colours.nodes[treeNode.data.status].border;
 
         var adjustedRadius = settings.nodes.radius + ((treeNode.data.importance || 1) * 2);
 
@@ -291,7 +275,7 @@ dmf.createModule('renderer', function(c) {
         ctx.textAlign = "center";
         // ctx.textBaseline = "middle";
         ctx.font = fontSize + settings.font.face;
-        ctx.fillStyle = c.data.project.settings.colours.font;
+        ctx.fillStyle = settings.colours.font;
         var text = node.data.label;
 
         drawWrappedText(text, s.x, s.y - settings.font.size, adjustedRadius * 2);
