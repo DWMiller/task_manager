@@ -87,7 +87,10 @@ dmf.createModule('menu-load', function(c) {
 
         c.data.project = projectData;
 
-        c.notify('compatibility-check');
+        if (!c.data.project.version || c.data.project.version < dmf.config.globals.version) {
+            c.log(1, 'Outdated file version detected, running compatibility updates');
+            c.notify('compatibility-check');
+        }
 
         localStorage.setItem('last-opened', projectId);
         c.notify('project-opened');
