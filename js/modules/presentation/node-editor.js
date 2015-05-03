@@ -2,8 +2,6 @@ dmf.createModule('node-editor', function(c) {
     'use strict';
 
     var properties = {
-        id: 'node-editor',
-        selector: 'node-editor',
         listeners: {
             'project-opened': projectOpened,
             'node-selected': nodeSelected,
@@ -119,10 +117,7 @@ dmf.createModule('node-editor', function(c) {
         var rootNode = c.data.project.projectTree.rootNode;
         c.data.project.projectTree.traverseNode(rootNode, deleteNodeFromParent, rootNode);
 
-        c.notify({
-            type: 'node-deleted',
-            data: selectedNode
-        });
+        c.notify('node-deleted',selectedNode);
 
         c.notify('data-changed');
 
@@ -151,10 +146,7 @@ dmf.createModule('node-editor', function(c) {
         selectedNode.data.status = elements['node-status'].value;
         selectedNode.data.importance = elements['node-importance'].value;
 
-        c.notify({
-            type: 'node-edited',
-            data: selectedNode
-        });
+        c.notify('node-edited',selectedNode);
 
         c.notify('data-changed');
     }

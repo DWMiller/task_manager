@@ -2,7 +2,6 @@ dmf.createModule('saver', function(c, config) {
     'use strict';
 
     var properties = {
-        id: 'saver',
         listeners: {
             'project-started': createNewProject,
             'data-changed': dataChanged

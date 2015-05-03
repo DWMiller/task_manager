@@ -4,16 +4,16 @@
  * Provided as a location for general config settings if an individual file is not appropriate or not preferred.
  * @type {Object}
  */
-dmf.extendConfig({
-	globals: {
-		version: '0'
-	},	
-	saver: {
-		'namespace': 'task_manager_',
-		'id-length': 16
-	},
-	loader: {
-		'namespace': 'task_manager_',
-	},	
+dmf.extend(dmf.config, {
+    globals: {
+        version: '0'
+    },
+    saver: {
+        'namespace': 'task_manager_',
+        'id-length': 16
+    },
+    loader: {
+        'namespace': 'task_manager_',
+    },
 
 });

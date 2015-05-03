@@ -1,4 +1,5 @@
 dmf.fn.shuffleArray = function(array) {
+	'use strict';
     var tmp, randomIndex, pointer = array.length;
     if (pointer)
         while (--pointer) {

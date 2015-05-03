@@ -2,17 +2,10 @@ dmf.createModule('compatibility', function(c, config) {
     'use strict';
 
     var properties = {
-        id: 'compatibility',
         listeners: {
             'compatibility-check': compatibilityCheck
         }
     };
-
-    /************************************ MODULE INITIALIZATION ************************************/
-
-    function initialize() {}
-
-    function destroy() {}
 
     /******************************* Framework Listeners **********************/
 
@@ -52,13 +45,8 @@ dmf.createModule('compatibility', function(c, config) {
         // }
     }
 
-    /************************************ GENERAL FUNCTIONS ************************************/
-
-
     return {
         properties: properties,
-        initialize: initialize,
-        destroy: destroy,
     };
 
 });

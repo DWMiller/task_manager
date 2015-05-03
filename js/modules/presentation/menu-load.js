@@ -1,9 +1,7 @@
 dmf.createModule('menu-load', function(c) {
     'use strict';
 
-    var p_properties = {
-        id: 'menu-load',
-        selector: 'menu-load',
+    var properties = {
         listeners: {
             'projects-loaded': populateProjects,
             'project-saved': populateProjects, // This is fairly intensive, don't do it or do differently
@@ -14,12 +12,12 @@ dmf.createModule('menu-load', function(c) {
 
     /************************************ MODULE INITIALIZATION ************************************/
 
-    function p_initialize(scope) {
+    function initialize() {
         elements['project-list'] = document.getElementById('existing-projects');
         bindEvents();
     }
 
-    function p_destroy() {
+    function destroy() {
         unbindEvents();
         elements = null;
     }
@@ -97,9 +95,9 @@ dmf.createModule('menu-load', function(c) {
     }
 
     return {
-        properties: p_properties,
-        initialize: p_initialize,
-        destroy: p_destroy,
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
     };
 
 });

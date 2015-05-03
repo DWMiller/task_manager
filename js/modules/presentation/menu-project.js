@@ -1,9 +1,7 @@
 dmf.createModule('menu-project', function(c) {
     'use strict';
 
-    var p_properties = {
-        id: 'menu-project',
-        selector: 'menu-project',
+    var properties = {
         listeners: {
             'project-opened': projectOpened
         }
@@ -13,13 +11,13 @@ dmf.createModule('menu-project', function(c) {
 
     /************************************ MODULE INITIALIZATION ************************************/
 
-    function p_initialize(scope) {
+    function initialize() {
         elements['project-name'] = document.getElementById('project-name');
         elements['colour-picker'] = document.getElementById('colour-picker');
         bindEvents();
     }
 
-    function p_destroy() {
+    function destroy() {
         unbindEvents();
         elements = null;
     }
@@ -53,9 +51,9 @@ dmf.createModule('menu-project', function(c) {
     }
 
     return {
-        properties: p_properties,
-        initialize: p_initialize,
-        destroy: p_destroy,
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
     };
 
 });

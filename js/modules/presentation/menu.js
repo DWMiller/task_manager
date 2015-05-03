@@ -1,18 +1,14 @@
 dmf.createModule('menu', function(c) {
     'use strict';
 
-    var p_properties = {
-        id: 'menu',
-        selector: 'menu',
-        listeners: {}
-    };
+    var properties = {};
 
     var elements = {},
         menuOpened = false;
 
     /************************************ MODULE INITIALIZATION ************************************/
 
-    function p_initialize(scope) {
+    function initialize() {
         elements = {
             //should not reference elements in different scope, use framework event instead
             'menu-toggle': document.getElementById('menu-toggle'),
@@ -25,7 +21,7 @@ dmf.createModule('menu', function(c) {
         bindEvents();
     }
 
-    function p_destroy() {
+    function destroy() {
         unbindEvents();
         elements = null;
     }
@@ -104,9 +100,9 @@ dmf.createModule('menu', function(c) {
     }
 
     return {
-        properties: p_properties,
-        initialize: p_initialize,
-        destroy: p_destroy,
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
     };
 
 });

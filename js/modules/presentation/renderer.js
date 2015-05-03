@@ -2,8 +2,6 @@ dmf.createModule('renderer', function(c) {
     'use strict';
 
     var properties = {
-        id: 'renderer',
-        selector: 'viewer',
         listeners: {
             'graph-ready': startRendering,
             'graph-unready': stopRendering,
@@ -125,13 +123,9 @@ dmf.createModule('renderer', function(c) {
             dragged.point.m = 10000.0;
             // dragged = null; // no dragging
 
-            console.log('springy node selected', selected.node);
+            // console.log('springy node selected', selected.node);
 
-            c.notify({
-                type: 'node-selected',
-                data: selected.node.data.treeNode
-            });
-
+            c.notify('node-selected',selected.node.data.treeNode);
         }
 
         renderer.start();
@@ -185,10 +179,7 @@ dmf.createModule('renderer', function(c) {
             node: node
         };
 
-        c.notify({
-            type: 'node-selected',
-            data: selected.node.data.treeNode
-        });
+        c.notify('node-selected',selected.node.data.treeNode);
     }
 
     /************************************ DRAWING FUNCTIONS *******************/

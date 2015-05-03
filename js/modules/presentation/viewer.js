@@ -2,8 +2,6 @@ dmf.createModule('viewer', function(c) {
     'use strict';
 
     var properties = {
-        id: 'viewer',
-        selector: 'viewer',
         listeners: {
             'project-opened': projectOpened,
             'node-created': nodeCreated,
@@ -18,7 +16,7 @@ dmf.createModule('viewer', function(c) {
 
     /************************************ MODULE INITIALIZATION ************************************/
 
-    function initialize(scope) {
+    function initialize() {
         elements.canvas = document.getElementById('viewer');
         elements.$viewer = $(elements.canvas);
         elements.version = document.getElementById('version');

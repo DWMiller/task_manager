@@ -2,7 +2,6 @@ dmf.createModule('loader', function(c, config) {
     'use strict';
 
     var properties = {
-        id: 'loader',
         listeners: {
             'project-imported': getExistingProjects
         }
@@ -10,11 +9,9 @@ dmf.createModule('loader', function(c, config) {
 
     /************************************ MODULE INITIALIZATION ************************************/
 
-    function initialize(scope) {
+    function initialize() {
         getExistingProjects();
     }
-
-    function destroy() {}
 
 
     /************************************ GENERAL FUNCTIONS ************************************/
@@ -38,7 +35,6 @@ dmf.createModule('loader', function(c, config) {
     return {
         properties: properties,
         initialize: initialize,
-        destroy: destroy,
     };
 
 });

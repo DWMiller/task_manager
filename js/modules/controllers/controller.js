@@ -1,8 +1,7 @@
 dmf.createModule('controller', function(c, config) {
     'use strict';
 
-    var p_properties = {
-        id: 'controller',
+    var properties = {
         listeners: {
             'state-startup': startup,
             'state-shutdown': shutdown,
@@ -10,11 +9,11 @@ dmf.createModule('controller', function(c, config) {
         }
     };
 
-    function p_initialize(scope) {
+    function initialize() {
         startup();
     }
 
-    function p_destroy() {
+    function destroy() {
         c.stopAllModules();
     }
 
@@ -51,9 +50,9 @@ dmf.createModule('controller', function(c, config) {
     }
 
     return {
-        properties: p_properties,
-        initialize: p_initialize,
-        destroy: p_destroy,
+        properties: properties,
+        initialize: initialize,
+        destroy: destroy,
     };
 
 });
