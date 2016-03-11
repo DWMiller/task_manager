@@ -46,3 +46,5 @@ node_modules
 *.sublime-workspace
 /bower_components
 /lib
+/.idea
+/dist

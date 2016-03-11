@@ -1,26 +1,26 @@
 module.exports = {
-	js: {
-		files: ['js/**/*'],
-		tasks: ['newer:jshint', 'newer:concat','version']
-	},
-	sass: {
-		files: ['sass/**/*'],
-		tasks: ['sass','version']		
-	},
-	copy: {
-		files: ['assets/**/*'],
-		tasks: ['newer:copy']				
-	},	
-	html: {
-		files: ['index.html'],
-		tasks: ['newer:htmlmin','version']				
-	},
-	grunt: {
-		files: ['grunt/**/*'],
-		tasks: [],
-		options: {
-			spawn: false,
-			reload: true
-		}
-	}
+    js: {
+        files: ['src/js/**/*'],
+        tasks: ['newer:concat', 'version']
+    },
+    sass: {
+        files: ['src/sass/**/*'],
+        tasks: ['sass', 'version']
+    },
+    copy: {
+        files: ['src/assets/**/*'],
+        tasks: ['newer:copy']
+    },
+    html: {
+        files: ['src/index.html'],
+        tasks: ['newer:copy','version']
+    },
+    grunt: {
+        files: ['grunt/**/*'],
+        tasks: [],
+        options: {
+            spawn: false,
+            reload: true
+        }
+    }
 }
