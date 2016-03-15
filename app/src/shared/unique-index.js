@@ -1,4 +1,4 @@
-dmf.fn.uniqueIndex = function(length) {
+window.uniqueIndex = function(length) {
     'use strict';
     var charSet = 'abcdefghijklmnopqrstuvwxyz0123456789';
     var charSetSize = charSet.length;

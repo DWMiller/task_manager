@@ -14,9 +14,9 @@
         "tests"
     ],
     "dependencies": {
-        "dmf": "git://github.com/DWMiller/dmf.git",
-        "dmf_module_collection": "git://github.com/DWMiller/dmf-module-collection.git",
-        "jquery": "~2.1.4",
+        "angular": "^1.4.9",
+        "angular-ui-router": "~0.2.15",
+        "jquery": "^2.2.0",
         "springy": "~2.7.1",
         "quill": "~0.19.11",
         "jscolor": "git://github.com/jo/JSColor.git"

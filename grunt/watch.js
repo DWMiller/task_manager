@@ -1,19 +1,19 @@
 module.exports = {
     js: {
-        files: ['src/js/**/*'],
-        tasks: ['newer:concat', 'version']
+        files: ['app/src/**/*.js'],
+        tasks: ['dev_js']
     },
     sass: {
-        files: ['src/sass/**/*'],
-        tasks: ['sass', 'version']
+        files: ['app/src/**/*.scss'],
+        tasks: ['dev_css']
     },
     copy: {
-        files: ['src/assets/**/*'],
-        tasks: ['newer:copy']
+        files: ['app/src/assets/**/*'],
+        tasks: ['copy']
     },
     html: {
-        files: ['src/index.html'],
-        tasks: ['newer:copy','version']
+        files: ['app/index.html', 'app/src/**/*.template.html'],
+        tasks: ['dev_html']
     },
     grunt: {
         files: ['grunt/**/*'],

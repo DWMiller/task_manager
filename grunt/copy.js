@@ -3,15 +3,15 @@ module.exports = {
         files: [
             // includes files within path and its sub-directories
             {
-                cwd: 'src/',
+                cwd: 'app/src/',
                 src: ['assets/**'],
-                dest: 'dist/',
+                dest: 'build/',
                 expand: true
             },
             {
-                cwd: 'src/',
+                cwd: 'app/',
                 src: ['index.html'],
-                dest: 'dist/',
+                dest: 'build/',
                 expand: true
             }
         ]

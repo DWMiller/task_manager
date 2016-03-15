@@ -1,3 +1,3 @@
 module.exports = {
-    clean: ['dist/js/production.js']
+    clean: ['build/js/production.js']
 };
