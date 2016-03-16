@@ -1,24 +1,25 @@
 {
-    "name": "task_manager",
-    "version": "0.1.381",
-    "authors": [
-        "DWMiller <david.miller8@mohawkcollege.ca>"
-    ],
-    "license": "MIT",
-    "private": true,
-    "ignore": [
-        "**/.*",
-        "node_modules",
-        "bower_components",
-        "test",
-        "tests"
-    ],
-    "dependencies": {
-        "angular": "^1.4.9",
-        "angular-ui-router": "~0.2.15",
-        "jquery": "^2.2.0",
-        "springy": "~2.7.1",
-        "quill": "~0.19.11",
-        "jscolor": "git://github.com/jo/JSColor.git"
-    }
+  "name": "task_manager",
+  "version": "0.1.381",
+  "authors": [
+    "DWMiller <david.miller8@mohawkcollege.ca>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.4.9",
+    "angular-ui-router": "~0.2.15",
+    "jquery": "^2.2.0",
+    "springy": "~2.7.1",
+    "quill": "~0.19.11",
+    "jscolor": "git://github.com/jo/JSColor.git",
+    "stampit": "^2.1.0"
+  }
 }

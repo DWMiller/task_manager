@@ -1,4 +1,4 @@
-<div id="menu" role="menu">
+<div id="menu" role="menu" ng-class="{'active': container.state.menuOpened}">
     <!-- right sidebar content -->
     <header>
         <h2>Menu</h2>
@@ -10,12 +10,17 @@
         </header>
 
         <form id="menu-load">
-            <select name="existing-projects" size="4"
-                    id="existing-projects"></select>
+            <select id="existing-projects" size="4">
+                <option ng-repeat="project in menu.data.projects" value="project.id">
+                    {{project.id}}
+                </option>
+
+
+            </select>
             <!-- <button id="project-open" class="button raised blue">Load Project</button> -->
         </form>
 
-        <button id="project-create" class="button raised blue" ng-click="menu.projectCreate()">
+        <button id="project-create" class="button raised blue" ng-click="menu.projectCreateClick()">
             Create New
             Project
         </button>

@@ -2,7 +2,6 @@ html {
     background: $base;
     line-height: $baseLineHeight;
     font-size: $baseFontSize;
-    font-family: Open-sans, Georgia;
 }
 html, body, #main-container {
     // overflow: hidden; // Need this, but not until styles exist to ensure content will always fit

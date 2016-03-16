@@ -47,4 +47,4 @@ node_modules
 /bower_components
 /lib
 /.idea
-/dist
+/build

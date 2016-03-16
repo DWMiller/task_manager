@@ -1,4 +1,4 @@
-<div id="node-editor">
+<div id="node-editor" ng-class="{'active': true}">
     <header>
         <h2>Node Editor
             <button id="editor-hide" class="button raised red">Hide
@@ -100,12 +100,18 @@
         </form>
     </section>
     <section id="node-commands">
-        <button id="node-createChild" class="button raised blue">Create
+        <button id="node-createChild"
+                class="button raised blue"
+                ng-click="nodeEditor.createChildNode()">Create
             Child Node
         </button>
-        <button id="node-delete" class="button raised red">Delete Node
+        <button id="node-delete"
+                class="button raised red"
+                ng-click="nodeEditor.deleteNode()">Delete Node
         </button>
-        <button id="node-move" class="button raised green">Change
+        <button id="node-move"
+                class="button raised green"
+                ng-click="nodeEditor.startParentSelectionMode()">Change
             Parent
         </button>
     </section>

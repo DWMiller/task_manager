@@ -1,5 +1,5 @@
-var appManager = angular.module("task-manager", ['tm-menu', 'tm-node-editor',
-    'ui.router']);
+var appManager = angular.module("task-manager", ['tm-menu', 'tm-node-editor', 'tm-renderer',
+    'tm-projects', 'ui.router']);
 
 (function(app) {
     app.run(['$rootScope', '$state', run]);

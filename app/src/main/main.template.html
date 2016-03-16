@@ -1,20 +1,7 @@
-<nav id="menu-toggle" role="navigation" ng-click="main.state.menuOpened = !main.state.menuOpened">
-    <a class="fa fa-2x fa-bars"></a>
-</nav>
-
-<div id="main" role="main" ng-class="{'menu-active': main.state.menuOpened}">
-    <node-editor></node-editor>
-
-    <h1 id="project-name">{{main.name}}</h1>
-    <canvas id="viewer"></canvas>
+<div id="main" role="main">
+    <button ng-click="main.createProjectClick()">Create Project</button>
 </div>
-<!-- /main content -->
 
 
-<!-- the right sidebar -->
-<menu></menu>
 
 
-<footer role="footer">
-    <span id="version"></span>
-</footer>

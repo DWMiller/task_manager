@@ -1,8 +1,6 @@
 @import '../shared/sass/vendors/normalize';
 @import '../shared/sass/vendors/flat-colors';
-@import '../shared/sass/vendors/font_awesome';
 @import '../shared/sass/vendors/quill.snow.scss';
-
 @import '../shared/sass/utils/functions';
 @import '../shared/sass/utils/variables';
 @import '../shared/sass/globals/z-index';
@@ -14,17 +12,16 @@
  * Components are style sets dealing with a specific type of element 
  * that may be used throughout the application
  */
-
 @import '../shared/sass/components/forms';
 @import '../shared/sass/components/buttons';
 /**
  * Modules are style sets dealing with specific sections of the content, 
  * typically identified by id
  */
-
+@import '../container/container';
 @import '../shared/sass/modules/footer';
-@import '../shared/sass/modules/main';
-@import '../shared/sass/modules/menu';
-@import '../shared/sass/modules/nav';
-@import '../shared/sass/modules/node-editor';
+@import '../main/main';
+@import '../menu/menu';
+@import '../menu/nav';
+@import '../node-editor/node-editor';
 @import '../shared/sass/modules/viewer';

@@ -1,8 +1,9 @@
 (function() {
     "use strict";
-    angular.module('task-manager').controller("mainController", [mainController]);
+    angular.module('task-manager').controller("mainController", ['projects',
+        '$state', mainController]);
 
-    function mainController() {
+    function mainController(projects, $state) {
 
         let main = this;
 
@@ -10,6 +11,14 @@
             menuOpened: false
         };
 
+        main.createProjectClick = function() {
+            //localStorage.clear() // fuck persistant data for the moment
+            let project = projects.createProject();
+            projects.saveProject(project);
 
+            $state.go("project", {
+                projectId: project.id
+            });
+        }
     }
 })();

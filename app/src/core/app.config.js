@@ -16,7 +16,14 @@
         $stateProvider.state("default", {
             url: "/",
             templateUrl: "src/main/main.template.html",
-            controller: "mainController as main",
+            controller: "mainController as main"
         });
+
+        $stateProvider.state("project", {
+            url: "/project/:projectId",
+            templateUrl: "src/project/project.template.html",
+            controller: "projectController as project"
+        });
+
     }
 })(appManager);

@@ -7,9 +7,10 @@ module.exports = {
             "bower_components/angular/angular.js",
             "bower_components/angular-ui-router/release/angular-ui-router.js",
             'bower_components/jquery/dist/jquery.js',
+            'bower_components/jscolor/jscolor.js',
             'bower_components/springy/springy.js',
-            'bower_components/quill/dist/quill.js',
-            'bower_components/jscolor/jscolor.js'
+            "bower_components/stampit/stampit.js",
+            'bower_components/quill/dist/quill.js'
         ],
         dest: 'build/js/vendor.js'
     },

@@ -1,13 +1,19 @@
 (function() {
     "use strict";
-    angular.module('tm-menu').controller("menuController", [menuController]);
+    angular.module('tm-menu').controller("menuController", ['projects',
+        menuController]);
 
-    function menuController() {
+    function menuController(projects) {
 
         let menu = this;
 
-        menu.projectCreate = function() {
-            c.notify('project-started');
+        menu.data = {
+            projects: projects.getAllProjects()
+        }
+
+        menu.projectCreateClick = function() {
+            let project = projects.createProject();
+            console.log(project);
         };
 
         menu.projectImport = function(e) {

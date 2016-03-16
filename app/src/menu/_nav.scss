@@ -1,0 +1,13 @@
+[role="navigation"] {
+  position: absolute;
+  height: $menu-header-height;
+  background: black;
+  color: white;
+  cursor: pointer;
+  width: 100%;
+  text-align: right;
+  padding: 0 1em;
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}

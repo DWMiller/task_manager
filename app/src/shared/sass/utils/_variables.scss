@@ -12,12 +12,15 @@ $max-width: 2000px;
 $md-brkp: 900px;
 $sm-brkp: $md-brkp - 1px;
 $lg-brkp: 1400px;
+
 $pageMargin-sm: 0;
 $pageMargin-md: 10%;
 $pageMargin-lg: 20%;
-$touch-height-min: 44px; // Minimum size to ensure touchable elemnts aren't too small for fingers
+
+$touch-height-min: 44px;
+// Minimum size to ensure touchable elemnts aren't too small for fingers
 $touch-width-min: 44px;
 $touch-margin: $baseLineHeight;
-$menu-width-sm: 75%;
-$menu-width-md: 50%;
-$menu-width-lg: 35%;
+
+$menu-header-height: 2em;
+$menu-width: 500px;

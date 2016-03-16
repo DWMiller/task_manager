@@ -4,5 +4,11 @@
 
     function containerController() {
 
+        let container = this;
+
+        container.state = {
+            menuOpened: false
+        };
+
     }
 })();
