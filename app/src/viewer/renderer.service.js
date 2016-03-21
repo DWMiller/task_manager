@@ -1,70 +1,68 @@
 (function() {
     "use strict";
-    angular.module("tm-renderer", [])
+    angular.module("tm-viewer")
         .service("renderer", [renderer]);
 
     function renderer() {
-        var elements = {};
+        var elements = {
+            canvas: null,
+            $canvas: null
+        };
+
+        var settings = {
+            stiffness: 300.0,
+            repulsion: 500.0,
+            damping: 0.5,
+            minEnergyThreshold: 0.00001,
+            maxSelectionDistance: 2
+        };
+
         var graph;
-
-        var stiffness = 300.0;
-        var repulsion = 500.0;
-        var damping = 0.5;
-        var minEnergyThreshold = 0.00001;
-
-        var maxSelectionDistance = 2; //maximum distance a click may be from a node to trigger a selection
-
-        var settings;
 
         var ctx, layout, currentBB, targetBB, renderer;
 
         var state = {
-            ready: false
+            ready: false,
+            selected: null,
+            nearest: null,
+            dragged: null
         };
 
         // half-assed drag and drop
-        var selected = null;
-        var nearest = null;
-        var dragged = null;
 
-        function initialize(scope) {
-            elements.canvas = document.getElementById('viewer');
-        }
-
-        function destroy() {
-            elements = {};
-            unbindEvents();
-        }
 
         function bindEvents() {
-            $(elements.canvas).on('mousedown', mousedown);
+            elements.$canvas.on('mousedown', mousedown);
             // $(elements.canvas).on('dblclick', doubleClick);
-            $(elements.canvas).on('mouseup', mouseup);
-            $(elements.canvas).on('mousemove', mousemove);
-            $(elements.canvas).on('node-clicked', nodeClicked);
+            elements.$canvas.on('mouseup', mouseup);
+            elements.$canvas.on('mousemove', mousemove);
+            elements.$canvas.on('node-clicked', nodeClicked);
         }
 
         function unbindEvents() {
-            $(elements.canvas).off('mousedown', mousedown);
+            elements.$canvas.off('mousedown', mousedown);
             // $(elements.canvas).off('dblclick', doubleClick);
-            $(elements.canvas).off('mouseup', mouseup);
-            $(elements.canvas).off('mousemove', mousemove);
-            $(elements.canvas).off('node-clicked', nodeClicked);
+            elements.$canvas.off('mouseup', mouseup);
+            elements.$canvas.off('mousemove', mousemove);
+            elements.$canvas.off('node-clicked', nodeClicked);
         }
 
         /******************************* Framework Listeners **********************/
 
         function startRendering(data) {
+            elements.$canvas = data.canvas;
+            elements.canvas = data.canvas[0];
+
             unbindEvents();
             bindEvents();
 
-            settings = data.project;
+            angular.extend(settings, data.project.settings);
 
             state.ready = true;
 
             graph = data.graph;
             ctx = elements.canvas.getContext("2d");
-            layout = new Springy.Layout.ForceDirected(graph, stiffness, repulsion, damping, minEnergyThreshold);
+            layout = new Springy.Layout.ForceDirected(graph, settings.stiffness, settings.repulsion, settings.damping, settings.minEnergyThreshold);
 
             // calculate bounding box of graph layout.. with ease-in
             currentBB = layout.getBoundingBox();
@@ -100,35 +98,33 @@
                 y: e.pageY - pos.top
             });
 
-            nearest = layout.nearest(p);
+            state.nearest = layout.nearest(p);
 
-            if (nearest.distance > maxSelectionDistance) {
-                if (selected) {
-                    selected = null;
-                    c.notify('node-deselected');
+            if (state.nearest.distance > settings.maxSelectionDistance) {
+                if (state.selected) {
+                    state.selected = null;
+                    // c.notify('node-deselected');
                 }
 
                 return;
             }
 
-            selected = dragged = nearest;
+            state.selected = state.dragged = state.nearest;
 
-            console.log(selected);
+            if (state.selected.node !== null) {
+                state.dragged.point.m = 10000.0;
+                // state.dragged = null; // no dragging
 
-            if (selected.node !== null) {
-                dragged.point.m = 10000.0;
-                // dragged = null; // no dragging
+                // console.log('springy node selected', state.selected.node);
 
-                // console.log('springy node selected', selected.node);
-
-                c.notify('node-selected', selected.node.data.treeNode);
+                // c.notify('node-selected', selected.node.data.treeNode);
             }
 
             renderer.start();
         }
 
         function mouseup(e) {
-            dragged = null;
+            state.dragged = null;
         }
 
         function mousemove(e) {
@@ -138,11 +134,11 @@
                 x: e.pageX - pos.left,
                 y: e.pageY - pos.top
             });
-            nearest = layout.nearest(p);
+            state.nearest = layout.nearest(p);
 
-            if (dragged !== null && dragged.node !== null) {
-                dragged.point.p.x = p.x;
-                dragged.point.p.y = p.y;
+            if (state.dragged !== null && state.dragged.node !== null) {
+                state.dragged.point.p.x = p.x;
+                state.dragged.point.p.y = p.y;
             }
 
             renderer.start();
@@ -155,9 +151,9 @@
         //         x: e.pageX - pos.left,
         //         y: e.pageY - pos.top
         //     });
-        //     selected = layout.nearest(p);
+        //     state.selected = layout.nearest(p);
 
-        //     var node = selected.node;
+        //     var node = state.selected.node;
 
         //     if (node && node.data && node.data.ondoubleclick) {
         //         node.data.ondoubleclick();
@@ -171,11 +167,11 @@
          * @return {[type]}      [description]
          */
         function nodeClicked(e, node) {
-            selected = {
+            state.selected = {
                 node: node
             };
 
-            c.notify('node-selected', selected.node.data.treeNode);
+            // c.notify('node-selected', state.selected.node.data.treeNode);
         }
 
         /************************************ DRAWING FUNCTIONS *******************/
@@ -235,24 +231,25 @@
         }
 
         function drawNode(node, p) {
+
             var treeNode = node.data.treeNode;
 
             var s = toScreen(p);
 
             ctx.save();
 
-            var isSelected = (selected !== null && selected.node !== null && selected.node.id === node.id);
+            var isSelected = (state.selected !== null && state.selected.node !== null && state.selected.node.id === node.id);
 
-            if (treeNode.data.status !== 'complete') {
-                treeNode.data.status = 'incomplete';
+            if (treeNode.status !== 'complete') {
+                treeNode.status = 'incomplete';
             }
 
             var variant = isSelected ? 'selected' : 'default';
 
-            ctx.fillStyle = settings.colours.nodes[treeNode.data.status][variant];
-            ctx.strokeStyle = settings.colours.nodes[treeNode.data.status].border;
+            ctx.fillStyle = settings.colours.nodes[treeNode.status][variant];
+            ctx.strokeStyle = settings.colours.nodes[treeNode.status].border;
 
-            var adjustedRadius = settings.nodes.radius + ((treeNode.data.importance || 1) * 2);
+            var adjustedRadius = settings.nodes.radius + ((treeNode.importance || 1) * 2);
 
             // fill background
             if (isSelected) {
@@ -418,7 +415,6 @@
 
             Springy.requestAnimationFrame(adjust);
         }
-
 
         return {
             start: startRendering,

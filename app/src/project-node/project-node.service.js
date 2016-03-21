@@ -12,7 +12,7 @@
                     }
 
                     this.children.push(node);
-                }
+                },
             },
             refs: {
                 //A map of property names and values to be mixed into each new object.
@@ -24,8 +24,26 @@
             props: {
                 label: 'Unlabeled',
                 description: 'No description',
-            }
-            //static: {} //add properties to stamp, not an object
+                status: 'incomplete',
+                importance: 1
+            },
+            static: {
+                traverseNode: function(node, callback, parent) {
+                    callback(node, parent);
+
+                    if (node.hasOwnProperty('children')) {
+
+                        for(var i = 0, len = node.children.length; i < len; i++) {
+                            // if (!node.children[i].hasOwnProperty('traverseNode')) {
+                            // If not a node, create a node
+                            // node.children[i] = new window.TreeNode(this, node.children[i]);
+                            // }
+                            this.traverseNode(node.children[i], callback, node);
+                        }
+
+                    }
+                }
+            } //add properties to stamp, not an object
         });
 
     }

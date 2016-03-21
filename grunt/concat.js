@@ -21,6 +21,8 @@ module.exports = {
         src: [
             "app/src/core/app.module.js",
             "app/src/**/*.module.js",
+            "app/src/**/*.service.js",
+            "app/src/**/*.directive.js",
             "app/src/**/*.config.js",
             "app/src/**/*.controller.js",
             "app/src/**/*.js"

@@ -28,7 +28,19 @@
                                     border: '#BDC3C7'
                                 }
                             }
-                        }
+                        },
+                        font: {
+                            size: 12,
+                            face: "Open-sans, Verdana, sans-serif"
+                        },
+                        nodes: {
+                            radius: 40,
+                            borderWidth: 3
+                        },
+                        edges: {
+                            width: 2
+                        },
+
                     }
                 };
 
@@ -37,10 +49,15 @@
                 });
 
                 project.tree.push(initialNode);
+                project.tree.push(initialNode);
+                project.tree.push(initialNode);
+                project.tree.push(initialNode);
 
-                initialNode.addChild(projectNode({
-                    label: 'Unnamed Project'
-                }))
+                project.tree.forEach(function(node) {
+                    node.addChild(projectNode({
+                        label: 'Unnamed Project'
+                    }))
+                });
 
                 return project;
             },
