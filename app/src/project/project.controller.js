@@ -1,4 +1,4 @@
-(function() {
+(function () {
     "use strict";
     angular.module('task-manager').controller("projectController",
         ['projects', '$state', 'projectNode', projectController]);
@@ -9,14 +9,10 @@
 
         project.data = projects.getProject($state.params.projectId);
 
-        var elements = {},
-            graph, $springy;
+        var elements = {};
 
-
-        function initialize() {}
-
-
-
+        function initialize() {
+        }
 
         // function nodeCreated(data) {
         //     addGraphNode(data.node, data.parent);

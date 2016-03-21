@@ -1,4 +1,4 @@
-(function() {
+(function () {
     "use strict";
     angular.module("tm-projects", ['tm-project-node'])
         .service("projects", ['projectNode', projectsService]);
@@ -7,7 +7,7 @@
     function projectsService(projectNode) {
 
         return {
-            createProject: function() {
+            createProject: function () {
                 let project = {
                     id: 'task_manager_' + window.uniqueIndex(24),
                     name: 'Unnamed Project',
@@ -53,7 +53,7 @@
                 project.tree.push(initialNode);
                 project.tree.push(initialNode);
 
-                project.tree.forEach(function(node) {
+                project.tree.forEach(function (node) {
                     node.addChild(projectNode({
                         label: 'Unnamed Project'
                     }))
@@ -61,32 +61,32 @@
 
                 return project;
             },
-            saveProject: function(project) {
+            saveProject: function (project) {
                 localStorage.setItem(project.id, JSON.stringify(project));
             },
-            getProject: function(projectId) {
+            getProject: function (projectId) {
                 let project = JSON.parse(localStorage.getItem(projectId));
-                project.tree = this.restoreTree(project.tree)
+                project.tree = this.restoreTree(project.tree);
 
                 return project;
             },
-            restoreTree: function(tree) {
+            restoreTree: function (tree) {
                 tree.forEach(this.restoreNode, this);
                 return tree;
             },
-            restoreNode: function(node, index, array) {
+            restoreNode: function (node, index, array) {
                 node = array[index] = projectNode(node);
 
                 if (node.children) {
                     node.children = this.restoreTree(node.children)
                 }
             },
-            getAllProjects: function() {
+            getAllProjects: function () {
                 let filenameRegex = new RegExp('task_manager_');
 
-                let projects = {}
+                let projects = {};
 
-                for(var i = 0; i < localStorage.length; i++) {
+                for (var i = 0; i < localStorage.length; i++) {
                     var projectId = localStorage.key(i);
                     if (filenameRegex.test(projectId)) {
                         projects[projectId] = this.getProject(projectId);

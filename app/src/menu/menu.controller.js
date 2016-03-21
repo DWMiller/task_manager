@@ -9,11 +9,10 @@
 
         menu.data = {
             projects: projects.getAllProjects()
-        }
+        };
 
         menu.projectCreateClick = function() {
             let project = projects.createProject();
-            console.log(project);
         };
 
         menu.projectImport = function(e) {

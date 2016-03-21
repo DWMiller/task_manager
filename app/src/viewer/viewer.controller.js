@@ -1,4 +1,4 @@
-(function() {
+(function () {
     "use strict";
     angular.module('tm-viewer').controller("viewerController",
         ['renderer', 'projectNode', '$element', viewerController]);
@@ -9,15 +9,32 @@
         var graph;
 
         function initialize() {
-            wipeGraph();
             populateGraph();
-            renderGraph();
-        }
 
-        function wipeGraph() {
-            if (graph) {
-                graph.empty();
-            }
+            $element[0].addEventListener('mousedown', function (event) {
+                renderer.handlers.mousedown(event);
+            });
+
+            $element[0].addEventListener('mousemove', function (event) {
+                renderer.handlers.mousemove(event);
+            });
+
+            $element[0].addEventListener('mouseup', function (event) {
+                renderer.handlers.mouseup(event);
+            });
+
+            $element[0].addEventListener('dblclick', function (event) {
+                renderer.handlers.dblclick(event);
+            });
+
+            renderer.start({
+                    canvas: $element,
+                    graph: graph,
+                    project: viewer.project,
+                    callbacks: eventHandlers
+                }
+            );
+
         }
 
         function populateGraph() {
@@ -49,15 +66,16 @@
             }
         }
 
-        function renderGraph() {
-            renderer.start(
-                {
-                    canvas: $element,
-                    graph: graph,
-                    project: viewer.project
-                }
-            );
-        }
+        let eventHandlers = {
+            nodeSelected: function (node) {
+                console.log(node);
+            },
+            nodeDoubleClicked: function (node) {
+
+            }
+
+        };
+
 
         initialize();
     }

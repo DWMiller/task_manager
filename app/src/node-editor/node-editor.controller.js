@@ -1,60 +1,62 @@
-(function() {
+(function () {
     "use strict";
     angular.module('tm-node-editor').controller("nodeEditorController", [nodeEditorController]);
 
     function nodeEditorController() {
         let nodeEditor = this;
 
+        nodeEditor.state = {
+            active: false
+        };
+
         function projectOpened() {
             state.parentSelectionMode = false;
-            hideEditor();
         }
-
 
         function nodeSelected(treeNode) {
+            nodeEditor.state.active = true;
 
-            if (state.parentSelectionMode === true) {
-                state.parentSelectionMode = false;
-                deleteNode();
-                treeNode.children.push(selectedNode);
 
-                c.notify({
-                    type: 'node-moved',
-                    data: {
-                        parent: treeNode,
-                        node: selectedNode
-                    }
-                });
-            }
+            // if (state.parentSelectionMode === true) {
+            //     state.parentSelectionMode = false;
+            //     deleteNode();
+            //     treeNode.children.push(selectedNode);
+            //
+            //     // c.notify({
+            //     //     type: 'node-moved',
+            //     //     data: {
+            //     //         parent: treeNode,
+            //     //         node: selectedNode
+            //     //     }
+            //     // });
+            // }
 
             //trigger a save before changing the editor panel content
-            if (selectedNode && selectedNode !== treeNode) {
-                updateNode();
-            }
+            // if (selectedNode && selectedNode !== treeNode) {
+            //     updateNode();
+            // }
 
-            selectedNode = treeNode;
+            // selectedNode = treeNode;
 
-            updateEditor();
-            elements['node-label'].focus();
-            elements['node-label'].select();
+            // updateEditor();
+            // elements['node-label'].focus();
+            // elements['node-label'].select();
 
-            state.parentSelectionMode = false;
-
-            //elements.editor.className = 'active';
+            // state.parentSelectionMode = false;
         }
 
-        nodeEditor.deleteNode = function() {
+        nodeEditor.deleteNode = function () {
             var rootNode = c.data.project.projectTree.rootNode;
             c.data.project.projectTree.traverseNode(rootNode, deleteNodeFromParent, rootNode);
 
             c.notify('node-deleted', selectedNode);
 
             c.notify('data-changed');
+            nodeEditor.state.active = false;
 
-            hideEditor();
         };
 
-        nodeEditor.updateNode = function() {
+        nodeEditor.updateNode = function () {
 
             selectedNode.data.label = elements['node-label'].value;
             selectedNode.data.description = elements['node-description'].getHTML();
@@ -66,7 +68,7 @@
             c.notify('data-changed');
         };
 
-        nodeEditor.createChildNode = function() {
+        nodeEditor.createChildNode = function () {
             var node = new window.TreeNode(c.data.project.projectTree);
             node.data.label = 'child of ' + selectedNode.data.label;
             node.data.description = 'No description';
@@ -93,7 +95,7 @@
         function deleteNodeFromParent(node, parent) {
             //use indexof?
             if (node.data === selectedNode.data) {
-                parent.children.forEach(function(n, i) {
+                parent.children.forEach(function (n, i) {
                     if (selectedNode.data === n.data) {
                         parent.children.splice(i, 1);
                     }
@@ -109,12 +111,7 @@
             elements['node-importance'].value = selectedNode.data.importance || 1;
         }
 
-
-        function hideEditor() {
-            elements.editor.className = '';
-        }
-
-        nodeEditor.startParentSelectionMode =function() {
+        nodeEditor.startParentSelectionMode = function () {
             state.parentSelectionMode = true;
             elements.editor.className = '';
         }
