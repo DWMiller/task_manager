@@ -9,72 +9,74 @@
         <form>
             <fieldset>
                 <div class="input-group">
-                    <input type="text" id="node-label" value="">
+                    <input type="text" id="node-label" ng-model="nodeEditor.data.node.label">
                 </div>
-                <div class="input-group quill-wrapper">
-                    <div id="node-description--toolbar" class="toolbar">
-                        <div class="ql-format-group">
-                            <select title="Font" class="ql-font">
-                                <option value="sans-serif" selected="">
-                                    Sans Serif
-                                </option>
-                                <option value="serif">Serif</option>
-                                <option value="monospace">Monospace
-                                </option>
-                            </select>
-                            <select title="Size" class="ql-size">
-                                <option value="10px">Small</option>
-                                <option value="13px" selected="">
-                                    Normal
-                                </option>
-                                <option value="18px">Large</option>
-                                <option value="32px">Huge</option>
-                            </select>
-                        </div>
-                        <span class="ql-format-group">
-                            <span title="Bold"
-                                    class="ql-format-button ql-bold"></span>
-                            <span class="ql-format-separator"></span>
-                            <span title="Italic"
-                                    class="ql-format-button ql-italic"></span>
-                            <span class="ql-format-separator"></span>
-                            <span title="Underline"
-                                    class="ql-format-button ql-underline"></span>
-                            <span class="ql-format-separator"></span>
-                            <span title="Strikethrough"
-                                    class="ql-format-button ql-strike"></span>
-                        </span>
-                        <div class="ql-format-group">
-                            <span title="List"
-                                    class="ql-format-button ql-list"></span>
-                            <span class="ql-format-separator"></span>
-                            <span title="Bullet"
-                                    class="ql-format-button ql-bullet"></span>
-                            <span class="ql-format-separator"></span>
-                            <select title="Text Alignment"
-                                    class="ql-align">
-                                <option value="left" label="Left"
-                                        selected=""></option>
-                                <option value="center"
-                                        label="Center"></option>
-                                <option value="right"
-                                        label="Right"></option>
-                                <option value="justify"
-                                        label="Justify"></option>
-                            </select>
-                        </div>
-                        <div class="ql-format-group">
-                            <span title="Link"
-                                    class="ql-format-button ql-link"></span>
-                        </div>
-                    </div>
+                <!--ng-model="nodeEditor.data.node.description"-->
+                <!--<div class="input-group quill-wrapper">-->
+                <!--<div id="node-description&#45;&#45;toolbar" class="toolbar">-->
+                <!--<div class="ql-format-group">-->
+                <!--<select title="Font" class="ql-font">-->
+                <!--<option value="sans-serif" selected="">-->
+                <!--Sans Serif-->
+                <!--</option>-->
+                <!--<option value="serif">Serif</option>-->
+                <!--<option value="monospace">Monospace-->
+                <!--</option>-->
+                <!--</select>-->
+                <!--<select title="Size" class="ql-size">-->
+                <!--<option value="10px">Small</option>-->
+                <!--<option value="13px" selected="">-->
+                <!--Normal-->
+                <!--</option>-->
+                <!--<option value="18px">Large</option>-->
+                <!--<option value="32px">Huge</option>-->
+                <!--</select>-->
+                <!--</div>-->
+                <!--<span class="ql-format-group">-->
+                <!--<span title="Bold"-->
+                <!--class="ql-format-button ql-bold"></span>-->
+                <!--<span class="ql-format-separator"></span>-->
+                <!--<span title="Italic"-->
+                <!--class="ql-format-button ql-italic"></span>-->
+                <!--<span class="ql-format-separator"></span>-->
+                <!--<span title="Underline"-->
+                <!--class="ql-format-button ql-underline"></span>-->
+                <!--<span class="ql-format-separator"></span>-->
+                <!--<span title="Strikethrough"-->
+                <!--class="ql-format-button ql-strike"></span>-->
+                <!--</span>-->
+                <!--<div class="ql-format-group">-->
+                <!--<span title="List"-->
+                <!--class="ql-format-button ql-list"></span>-->
+                <!--<span class="ql-format-separator"></span>-->
+                <!--<span title="Bullet"-->
+                <!--class="ql-format-button ql-bullet"></span>-->
+                <!--<span class="ql-format-separator"></span>-->
+                <!--<select title="Text Alignment"-->
+                <!--class="ql-align">-->
+                <!--<option value="left" label="Left"-->
+                <!--selected=""></option>-->
+                <!--<option value="center"-->
+                <!--label="Center"></option>-->
+                <!--<option value="right"-->
+                <!--label="Right"></option>-->
+                <!--<option value="justify"-->
+                <!--label="Justify"></option>-->
+                <!--</select>-->
+                <!--</div>-->
+                <!--<div class="ql-format-group">-->
+                <!--<span title="Link"-->
+                <!--class="ql-format-button ql-link"></span>-->
+                <!--</div>-->
+                <!--</div>-->
 
-                    <!-- Create the editor container -->
-                    <div id="node-description--editor" class="editor">
-                        <div>Hello World!</div>
-                    </div>
+                <!--&lt;!&ndash; Create the editor container &ndash;&gt;-->
+                <!--<div id="node-description&#45;&#45;editor" class="editor">-->
+                <!--<div>Hello World!</div>-->
+                <!--</div>-->
 
-                </div>
+                <!--</div>-->
+                <hr>
                 <div class="input-group">
                     <label for="node-type">Type</label>
                     <select name="" id="node-type">
@@ -85,7 +87,7 @@
                 </div>
                 <div class="input-group">
                     <label for="node-status">Status</label>
-                    <select name="" id="node-status">
+                    <select name="" id="node-status" ng-model="nodeEditor.data.node.status">
                         <option>Select Status</option>
                         <option value="complete">complete</option>
                         <option value="incomplete">incomplete</option>
@@ -94,7 +96,7 @@
                 <div class="input-group">
                     <label for="node-importance">Importance</label>
                     <input id="node-importance" type="number" min="1"
-                            max="10">
+                            max="10" ng-model="nodeEditor.data.node.importance">
                 </div>
             </fieldset>
         </form>

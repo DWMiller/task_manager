@@ -1,35 +1,46 @@
-(function () {
+(function() {
     "use strict";
-    angular.module('tm-node-editor').controller("nodeEditorController", [nodeEditorController]);
+    angular.module('tm-node-editor').controller("nodeEditorController",
+        ['$scope', nodeEditorController]);
 
-    function nodeEditorController() {
+    function nodeEditorController($scope) {
         let nodeEditor = this;
 
-        nodeEditor.state = {
-            active: false
+        nodeEditor.data = {
+            node: null,
+            pendingParentSelection: null
         };
 
-        function projectOpened() {
-            state.parentSelectionMode = false;
-        }
+        nodeEditor.state = {
+            active: false,
+        };
 
-        function nodeSelected(treeNode) {
+        $scope.$on('node-selected', function(event, args) {
             nodeEditor.state.active = true;
+            nodeEditor.data.node = args.node;
+            $scope.$apply();
+            nodeSelected(nodeEditor.data.node)
+        });
 
+        function nodeSelected(node) {
 
-            // if (state.parentSelectionMode === true) {
-            //     state.parentSelectionMode = false;
-            //     deleteNode();
-            //     treeNode.children.push(selectedNode);
-            //
-            //     // c.notify({
-            //     //     type: 'node-moved',
-            //     //     data: {
-            //     //         parent: treeNode,
-            //     //         node: selectedNode
-            //     //     }
-            //     // });
-            // }
+            if (nodeEditor.data.pendingParentSelection) {
+                // deleteNode();
+
+                if (!node.hasOwnProperty('children')) {
+                    node.children = [];
+                }
+
+                node.children.push(nodeEditor.data.pendingParentSelection);
+                // c.notify({
+                //     type: 'node-moved',
+                //     data: {
+                //         parent: treeNode,
+                //         node: selectedNode
+                //     }
+                // });
+                nodeEditor.data.pendingParentSelection = null;
+            }
 
             //trigger a save before changing the editor panel content
             // if (selectedNode && selectedNode !== treeNode) {
@@ -38,26 +49,23 @@
 
             // selectedNode = treeNode;
 
-            // updateEditor();
             // elements['node-label'].focus();
             // elements['node-label'].select();
 
             // state.parentSelectionMode = false;
         }
 
-        nodeEditor.deleteNode = function () {
-            var rootNode = c.data.project.projectTree.rootNode;
-            c.data.project.projectTree.traverseNode(rootNode, deleteNodeFromParent, rootNode);
+        // nodeEditor.deleteNode = function() {
+        //     var rootNode = c.data.project.projectTree.rootNode;
+        //     c.data.project.projectTree.traverseNode(rootNode, deleteNodeFromParent, rootNode);
+        //
+        //     c.notify('node-deleted', selectedNode);
+        //
+        //     c.notify('data-changed');
+        //     nodeEditor.state.active = false;
+        // };
 
-            c.notify('node-deleted', selectedNode);
-
-            c.notify('data-changed');
-            nodeEditor.state.active = false;
-
-        };
-
-        nodeEditor.updateNode = function () {
-
+        nodeEditor.updateNode = function() {
             selectedNode.data.label = elements['node-label'].value;
             selectedNode.data.description = elements['node-description'].getHTML();
             selectedNode.data.status = elements['node-status'].value;
@@ -68,7 +76,7 @@
             c.notify('data-changed');
         };
 
-        nodeEditor.createChildNode = function () {
+        nodeEditor.createChildNode = function() {
             var node = new window.TreeNode(c.data.project.projectTree);
             node.data.label = 'child of ' + selectedNode.data.label;
             node.data.description = 'No description';
@@ -95,7 +103,7 @@
         function deleteNodeFromParent(node, parent) {
             //use indexof?
             if (node.data === selectedNode.data) {
-                parent.children.forEach(function (n, i) {
+                parent.children.forEach(function(n, i) {
                     if (selectedNode.data === n.data) {
                         parent.children.splice(i, 1);
                     }
@@ -103,19 +111,8 @@
             }
         }
 
-
-        function updateEditor() {
-            elements['node-label'].value = selectedNode.data.label;
-            elements['node-description'].setHTML(selectedNode.data.description);
-            elements['node-status'].value = selectedNode.data.status;
-            elements['node-importance'].value = selectedNode.data.importance || 1;
+        nodeEditor.startParentSelectionMode = function() {
+            nodeEditor.data.pendingParentSelection = nodeEditor.data.node;
         }
-
-        nodeEditor.startParentSelectionMode = function () {
-            state.parentSelectionMode = true;
-            elements.editor.className = '';
-        }
-
-
     }
 })();

@@ -53,6 +53,8 @@
                 state.dragged.point.m = 10000.0;
                 callbacks.nodeSelected(state.selected.node.data.treeNode)
             }
+
+            renderer.start();
         }
 
         function mouseup(e) {

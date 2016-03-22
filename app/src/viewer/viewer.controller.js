@@ -1,9 +1,9 @@
-(function () {
+(function() {
     "use strict";
     angular.module('tm-viewer').controller("viewerController",
-        ['renderer', 'projectNode', '$element', viewerController]);
+        ['$rootScope', 'renderer', 'projectNode', '$element', viewerController]);
 
-    function viewerController(renderer, projectNode, $element) {
+    function viewerController($rootScope, renderer, projectNode, $element) {
         let viewer = this;
 
         var graph;
@@ -11,19 +11,19 @@
         function initialize() {
             populateGraph();
 
-            $element[0].addEventListener('mousedown', function (event) {
+            $element[0].addEventListener('mousedown', function(event) {
                 renderer.handlers.mousedown(event);
             });
 
-            $element[0].addEventListener('mousemove', function (event) {
+            $element[0].addEventListener('mousemove', function(event) {
                 renderer.handlers.mousemove(event);
             });
 
-            $element[0].addEventListener('mouseup', function (event) {
+            $element[0].addEventListener('mouseup', function(event) {
                 renderer.handlers.mouseup(event);
             });
 
-            $element[0].addEventListener('dblclick', function (event) {
+            $element[0].addEventListener('dblclick', function(event) {
                 renderer.handlers.dblclick(event);
             });
 
@@ -67,10 +67,11 @@
         }
 
         let eventHandlers = {
-            nodeSelected: function (node) {
+            nodeSelected: function(node) {
+                $rootScope.$broadcast('node-selected', {node: node});
                 console.log(node);
             },
-            nodeDoubleClicked: function (node) {
+            nodeDoubleClicked: function(node) {
 
             }
 

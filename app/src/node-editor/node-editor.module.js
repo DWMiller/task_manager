@@ -8,8 +8,6 @@
                 bindToController: true,
                 replace: true,
                 templateUrl: "src/node-editor/node-editor.template.html",
-                link: function($scope, element, attrs, controller) {
-                }
             }
         });
 })();

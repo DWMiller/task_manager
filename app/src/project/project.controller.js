@@ -1,14 +1,17 @@
-(function () {
+(function() {
     "use strict";
     angular.module('task-manager').controller("projectController",
-        ['projects', '$state', 'projectNode', projectController]);
+        ['$scope', 'projects', '$state', 'projectNode', projectController]);
 
-    function projectController(projects, $state, projectNode) {
+    function projectController($scope, projects, $state, projectNode) {
         let project = this;
-        project.state = {};
+
+        project.state = {
+            nodeSelected: null
+        };
 
         project.data = projects.getProject($state.params.projectId);
-
+        
         var elements = {};
 
         function initialize() {
