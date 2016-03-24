@@ -1,7 +1,9 @@
 <div id="node-editor" ng-class="{'active':  nodeEditor.state.active}">
     <header>
         <h2>Node Editor
-            <button id="editor-hide" class="button raised red">Hide
+            <button id="editor-hide"
+                    class="button raised red"
+                    ng-click="nodeEditor.hideEditorClick()">Hide
             </button>
         </h2>
     </header>
@@ -9,7 +11,8 @@
         <form>
             <fieldset>
                 <div class="input-group">
-                    <input type="text" id="node-label" ng-model="nodeEditor.data.node.label">
+                    <input type="text" id="node-label"
+                           ng-model="nodeEditor.data.node.label">
                 </div>
                 <!--ng-model="nodeEditor.data.node.description"-->
                 <!--<div class="input-group quill-wrapper">-->
@@ -87,7 +90,8 @@
                 </div>
                 <div class="input-group">
                     <label for="node-status">Status</label>
-                    <select name="" id="node-status" ng-model="nodeEditor.data.node.status">
+                    <select name="" id="node-status"
+                            ng-model="nodeEditor.data.node.status">
                         <option>Select Status</option>
                         <option value="complete">complete</option>
                         <option value="incomplete">incomplete</option>
@@ -96,7 +100,7 @@
                 <div class="input-group">
                     <label for="node-importance">Importance</label>
                     <input id="node-importance" type="number" min="1"
-                            max="10" ng-model="nodeEditor.data.node.importance">
+                           max="10" ng-model="nodeEditor.data.node.importance">
                 </div>
             </fieldset>
         </form>
@@ -104,16 +108,19 @@
     <section id="node-commands">
         <button id="node-createChild"
                 class="button raised blue"
-                ng-click="nodeEditor.createChildNode()">Create
+                ng-click="nodeEditor.createChildNode(nodeEditor.data.node)">
+            Create
             Child Node
         </button>
         <button id="node-delete"
                 class="button raised red"
-                ng-click="nodeEditor.deleteNode()">Delete Node
+                ng-click="nodeEditor.deleteNode(nodeEditor.data.node)">Delete
+            Node
         </button>
         <button id="node-move"
                 class="button raised green"
-                ng-click="nodeEditor.startParentSelectionMode()">Change
+                ng-click="nodeEditor.startParentSelectionMode(nodeEditor.data.node)">
+            Change
             Parent
         </button>
     </section>

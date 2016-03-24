@@ -17,7 +17,6 @@
 
         var state = {
             graph: null,
-            ready: false,
             selected: null,
             nearest: null,
             dragged: null
@@ -36,22 +35,20 @@
                 x: e.pageX - pos.left,
                 y: e.pageY - pos.top
             });
-            
+
             state.nearest = layout.nearest(p);
 
             if (state.nearest.distance > settings.maxSelectionDistance) {
                 if (state.selected) {
                     state.selected = null;
                 }
+            } else {
+                state.selected = state.dragged = state.nearest;
 
-                return;
-            }
-
-            state.selected = state.dragged = state.nearest;
-
-            if (state.selected.node !== null) {
-                state.dragged.point.m = 10000.0;
-                callbacks.nodeSelected(state.selected.node.data.treeNode)
+                if (state.selected.node !== null) {
+                    state.dragged.point.m = 10000.0;
+                    callbacks.nodeSelected(state.selected.node.data.treeNode)
+                }
             }
 
             renderer.start();
@@ -79,7 +76,7 @@
                 state.dragged.point.p.y = p.y;
             }
 
-            // renderer.start();
+            renderer.start();
         }
 
         function doubleClick(e) {
@@ -100,6 +97,8 @@
             if (node && node.data && node.data.ondoubleclick) {
                 callbacks.nodeDoubleClicked(state.selected.node.data.treeNode)
             }
+
+            renderer.start();
         }
 
         /************************************ DRAWING FUNCTIONS *******************/
@@ -137,14 +136,14 @@
 
             var diameter = settings.nodes.radius * 2;
 
-            // var intersection = intersect_line_box(s1, s2, {
-            //     x: x2 - settings.nodes.radius,
-            //     y: y2 - settings.nodes.radius
-            // }, diameter, diameter);
-            //
-            // if (!intersection) {
-            //     intersection = s2;
-            // }
+            var intersection = intersect_line_box(s1, s2, {
+                x: x2 - settings.nodes.radius,
+                y: y2 - settings.nodes.radius
+            }, diameter, diameter);
+
+            if (!intersection) {
+                intersection = s2;
+            }
 
             canvasUtils.drawLine(ctx, s1, s2, settings);
         }
@@ -199,73 +198,69 @@
         }
 
         // helpers for figuring out where to draw arrows
-        // function intersect_line_line(p1, p2, p3, p4) {
-        //     var denom = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
-        //
-        //     // lines are parallel
-        //     if (denom === 0) {
-        //         return false;
-        //     }
-        //
-        //     var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
-        //     var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
-        //
-        //     if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
-        //         return false;
-        //     }
-        //
-        //     return new Springy.Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
-        // }
+        function intersect_line_line(p1, p2, p3, p4) {
+            var denom = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
 
-        // function intersect_line_box(p1, p2, p3, w, h) {
-        //     var tl = {
-        //         x: p3.x,
-        //         y: p3.y
-        //     };
-        //     var tr = {
-        //         x: p3.x + w,
-        //         y: p3.y
-        //     };
-        //     var bl = {
-        //         x: p3.x,
-        //         y: p3.y + h
-        //     };
-        //     var br = {
-        //         x: p3.x + w,
-        //         y: p3.y + h
-        //     };
-        //
-        //     var result;
-        //
-        //
-        //     result = intersect_line_line(p1, p2, tl, tr);
-        //     if (result) {
-        //         return result;
-        //     } // top
-        //
-        //     result = intersect_line_line(p1, p2, tr, br);
-        //     if (result) {
-        //         return result;
-        //     } // right
-        //
-        //     result = intersect_line_line(p1, p2, br, bl);
-        //     if (result) {
-        //         return result;
-        //     } // bottom
-        //
-        //     result = intersect_line_line(p1, p2, bl, tl);
-        //     if (result) {
-        //         return result;
-        //     } // left
-        //
-        //     return false;
-        // }
-
-        function adjust() {
-            if (!state.ready) {
-                return;
+            // lines are parallel
+            if (denom === 0) {
+                return false;
             }
 
+            var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
+            var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
+
+            if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+                return false;
+            }
+
+            return new Springy.Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
+        }
+
+        function intersect_line_box(p1, p2, p3, w, h) {
+            var tl = {
+                x: p3.x,
+                y: p3.y
+            };
+            var tr = {
+                x: p3.x + w,
+                y: p3.y
+            };
+            var bl = {
+                x: p3.x,
+                y: p3.y + h
+            };
+            var br = {
+                x: p3.x + w,
+                y: p3.y + h
+            };
+
+            var result;
+
+
+            result = intersect_line_line(p1, p2, tl, tr);
+            if (result) {
+                return result;
+            } // top
+
+            result = intersect_line_line(p1, p2, tr, br);
+            if (result) {
+                return result;
+            } // right
+
+            result = intersect_line_line(p1, p2, br, bl);
+            if (result) {
+                return result;
+            } // bottom
+
+            result = intersect_line_line(p1, p2, bl, tl);
+            if (result) {
+                return result;
+            } // left
+
+            return false;
+        }
+
+        function adjust() {
             targetBB = layout.getBoundingBox();
             // current gets 20% closer to target every iteration
             currentBB = {
@@ -286,8 +281,6 @@
                 callbacks = data.callbacks;
 
                 angular.extend(settings, data.project.settings);
-
-                state.ready = true;
 
                 ctx = canvas.getContext("2d");
 
@@ -312,7 +305,6 @@
                 renderer.start();
             },
             stop: function stopRendering() {
-                state.ready = false;
                 if (renderer) {
                     renderer.stop();
                 }

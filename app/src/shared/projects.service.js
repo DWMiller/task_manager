@@ -45,24 +45,11 @@
                 };
 
                 project.tree.push(projectNode({
-                    label: 'Unnamed Project'
+                    label: 'Unnamed Project Root',
+                    root: true
                 }));
 
-                project.tree.push(projectNode({
-                    label: 'Unnamed Project'
-                }));
-
-                project.tree.push(projectNode({
-                    label: 'Unnamed Project'
-                }));
-
-                project.tree.forEach(function (node) {
-                    node.addChild(projectNode({
-                        label: 'Unnamed Child'
-                    }))
-                });
-
-                this.saveProject(project)
+                this.saveProject(project);
                 return project;
             },
             saveProject: function (project) {

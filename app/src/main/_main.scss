@@ -1,27 +1,20 @@
-/**
- * The primary container for the application content
- */
+.main {
 
-[role="main"] {
-    //padding-top:2em;
-    //overflow: hidden;
-    //background-color: $base;
-    //min-height: 100%;
-    //max-height:100%;
-    //transition: all 0.3s;
-    //width: 100%;
-    //position: absolute;
-    //// top: 2em;
-    //right: 0;
+  p {
+    font-size: 300%;
+    color: white;
+    text-align: center;
+    margin-top: 20%;
+  }
+
+  @media only screen and (min-width: $md-brkp) {
+
+  }
+
+  @media only screen and (min-width: $lg-brkp) {
+
+  }
 
 }
 
-@media only screen and (min-width: $md-brkp) {
-    [role="main"] {
 
-    }
-}
-@media only screen and (min-width: $lg-brkp) {
-    [role="main"] {
-    }
-}

@@ -11,7 +11,9 @@
 
         <form id="menu-load">
             <select id="existing-projects" size="4">
-                <option ng-repeat="project in menu.data.projects" value="project.id">
+                <option ng-repeat="project in menu.data.projects"
+                        ng-click="menu.openProjectClick(project)"
+                        value="project.id">
                     {{project.id}}
                 </option>
 
@@ -19,14 +21,15 @@
             <!-- <button id="project-open" class="button raised blue">Load Project</button> -->
         </form>
 
-        <button id="project-create" class="button raised blue" ng-click="menu.projectCreateClick()">
+        <button id="project-create" class="button raised blue"
+                ng-click="menu.projectCreateClick()">
             Create New
             Project
         </button>
 
         <!--<button id="project-export" class="button raised blue" ng-click="menu.projectExport()">-->
-            <!--Export-->
-            <!--Project-->
+        <!--Export-->
+        <!--Project-->
         <!--</button>-->
 
         <!--<br>-->
@@ -35,37 +38,37 @@
     </section>
 
     <!--<section>-->
-        <!--<header>-->
-            <!--<h2>Project Settings</h2>-->
-        <!--</header>-->
+    <!--<header>-->
+    <!--<h2>Project Settings</h2>-->
+    <!--</header>-->
 
-        <!--<form id="menu-project">-->
-            <!--<fieldset>-->
-                <!--<legend>Manage Node Status's</legend>-->
-                <!--<div class="input-group">-->
-                    <!--<label for=""></label>-->
-                    <!--<select name="" id="">-->
-                        <!--<option>Select Status</option>-->
-                        <!--<option value="complete">complete</option>-->
-                        <!--<option value="incomplete">incomplete</option>-->
-                    <!--</select>-->
-                    <!--<button>Add</button>-->
-                    <!--<button>Remove</button>-->
-                <!--</div>-->
-            <!--</fieldset>-->
-            <!--<fieldset>-->
-                <!--<div class="input-group">-->
-                    <!--<label for="">Name</label>-->
-                    <!--<input id="" type="text" value="">-->
-                <!--</div>-->
+    <!--<form id="menu-project">-->
+    <!--<fieldset>-->
+    <!--<legend>Manage Node Status's</legend>-->
+    <!--<div class="input-group">-->
+    <!--<label for=""></label>-->
+    <!--<select name="" id="">-->
+    <!--<option>Select Status</option>-->
+    <!--<option value="complete">complete</option>-->
+    <!--<option value="incomplete">incomplete</option>-->
+    <!--</select>-->
+    <!--<button>Add</button>-->
+    <!--<button>Remove</button>-->
+    <!--</div>-->
+    <!--</fieldset>-->
+    <!--<fieldset>-->
+    <!--<div class="input-group">-->
+    <!--<label for="">Name</label>-->
+    <!--<input id="" type="text" value="">-->
+    <!--</div>-->
 
-                <!--<div class="input-group">-->
-                    <!--<label for="">Colour</label>-->
-                    <!--<input id="colour-picker" class="color">-->
-                <!--</div>-->
+    <!--<div class="input-group">-->
+    <!--<label for="">Colour</label>-->
+    <!--<input id="colour-picker" class="color">-->
+    <!--</div>-->
 
-            <!--</fieldset>-->
-        <!--</form>-->
+    <!--</fieldset>-->
+    <!--</form>-->
     <!--</section>-->
 
 </div>

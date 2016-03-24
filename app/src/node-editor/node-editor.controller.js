@@ -1,10 +1,11 @@
-(function() {
+(function () {
     "use strict";
     angular.module('tm-node-editor').controller("nodeEditorController",
-        ['$scope', nodeEditorController]);
+        ['$rootScope', '$scope', 'projectNode', nodeEditorController]);
 
-    function nodeEditorController($scope) {
+    function nodeEditorController($rootScope, $scope, projectNode) {
         let nodeEditor = this;
+        let watcher = null;
 
         nodeEditor.data = {
             node: null,
@@ -15,104 +16,111 @@
             active: false,
         };
 
-        $scope.$on('node-selected', function(event, args) {
-            nodeEditor.state.active = true;
-            nodeEditor.data.node = args.node;
+        $scope.$on('node-selected', function (event, args) {
+            if (nodeEditor.data.pendingParentSelection) {
+                newParentSelected(args.node);
+            } else {
+                nodeSelected(args.node)
+            }
+
             $scope.$apply();
-            nodeSelected(nodeEditor.data.node)
         });
 
-        function nodeSelected(node) {
-
-            if (nodeEditor.data.pendingParentSelection) {
-                // deleteNode();
-
-                if (!node.hasOwnProperty('children')) {
-                    node.children = [];
-                }
-
-                node.children.push(nodeEditor.data.pendingParentSelection);
-                // c.notify({
-                //     type: 'node-moved',
-                //     data: {
-                //         parent: treeNode,
-                //         node: selectedNode
-                //     }
-                // });
-                nodeEditor.data.pendingParentSelection = null;
-            }
-
-            //trigger a save before changing the editor panel content
-            // if (selectedNode && selectedNode !== treeNode) {
-            //     updateNode();
-            // }
-
-            // selectedNode = treeNode;
-
-            // elements['node-label'].focus();
-            // elements['node-label'].select();
-
-            // state.parentSelectionMode = false;
-        }
-
-        // nodeEditor.deleteNode = function() {
-        //     var rootNode = c.data.project.projectTree.rootNode;
-        //     c.data.project.projectTree.traverseNode(rootNode, deleteNodeFromParent, rootNode);
-        //
-        //     c.notify('node-deleted', selectedNode);
-        //
-        //     c.notify('data-changed');
-        //     nodeEditor.state.active = false;
-        // };
-
-        nodeEditor.updateNode = function() {
-            selectedNode.data.label = elements['node-label'].value;
-            selectedNode.data.description = elements['node-description'].getHTML();
-            selectedNode.data.status = elements['node-status'].value;
-            selectedNode.data.importance = elements['node-importance'].value;
-
-            c.notify('node-edited', selectedNode);
-
-            c.notify('data-changed');
+        nodeEditor.hideEditorClick = function () {
+            nodeEditor.state.active = false;
         };
 
-        nodeEditor.createChildNode = function() {
-            var node = new window.TreeNode(c.data.project.projectTree);
-            node.data.label = 'child of ' + selectedNode.data.label;
-            node.data.description = 'No description';
-            node.data.status = 'incomplete';
-            node.data.importance = 1;
+        function nodeSelected(node) {
+            if (watcher) {
+                watcher();
+            }
 
-            selectedNode.addChild(node);
-
-            c.notify({
-                type: 'node-created',
-                data: {
-                    node: node,
-                    parent: selectedNode
-                }
+            watcher = $scope.$watchCollection(function () {
+                return node;
+            }, function (node) {
+                console.log(node);
+                $rootScope.$broadcast('node-edited', {
+                    node: node
+                });
             });
 
-            c.notify('data-changed');
-        };
-
-        /**
-         * [deleteMatchedChild description]
-         * @return {[type]} [description]
-         */
-        function deleteNodeFromParent(node, parent) {
-            //use indexof?
-            if (node.data === selectedNode.data) {
-                parent.children.forEach(function(n, i) {
-                    if (selectedNode.data === n.data) {
-                        parent.children.splice(i, 1);
-                    }
-                });
-            }
+            nodeEditor.data.node = node;
+            nodeEditor.state.active = true;
+            // elements['node-label'].focus();
+            // elements['node-label'].select();
         }
 
-        nodeEditor.startParentSelectionMode = function() {
-            nodeEditor.data.pendingParentSelection = nodeEditor.data.node;
+        function newParentSelected(parentNode) {
+            moveNode(nodeEditor.data.pendingParentSelection, parentNode);
+            nodeEditor.data.pendingParentSelection = null;
+        }
+
+        function moveNode(node, newParent) {
+
+            detachNode(node, node.parent);
+
+            if (!newParent.hasOwnProperty('children')) {
+                newParent.children = [];
+            }
+
+            newParent.children.push(node);
+            node.parent = newParent;
+
+            $rootScope.$broadcast('node-moved', {
+                parent: newParent,
+                node: node
+            });
+        }
+
+        nodeEditor.deleteNode = function (node) {
+            if (node.root) {
+                return;
+            }
+
+            detachNode(node, node.parent);
+
+            $rootScope.$broadcast('node-deleted', {
+                parent: node.parent,
+                node: node
+            });
+
+            nodeEditor.hideEditorClick();
+
+            // var rootNode = c.data.project.projectTree.rootNode;
+            // c.data.project.projectTree.traverseNode(rootNode, deleteNodeFromParent, rootNode);
+            // 
+            // c.notify('node-deleted', selectedNode);
+            //
+            // c.notify('data-changed');
+            // nodeEditor.state.active = false;
+        };
+
+        function detachNode(node, parent) {
+            let childIndex = parent.children.indexOf(node);
+            parent.children.splice(childIndex, 1);
+        }
+
+        nodeEditor.createChildNode = function (node) {
+
+            let newNode = projectNode({
+                label: 'child of ' + node.label
+            });
+
+            node.addChild(newNode);
+
+            $rootScope.$broadcast('node-created', {
+                node: newNode,
+                parent: node
+            });
+        };
+
+        nodeEditor.startParentSelectionMode = function (node) {
+            if (node.root) {
+                return;
+            }
+
+            nodeEditor.hideEditorClick();
+            nodeEditor.data.pendingParentSelection = node;
         }
     }
 })();

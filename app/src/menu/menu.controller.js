@@ -1,4 +1,4 @@
-(function() {
+(function () {
     "use strict";
     angular.module('tm-menu').controller("menuController", ['$state', 'projects',
         menuController]);
@@ -11,15 +11,24 @@
             projects: projects.getAllProjects()
         };
 
-        menu.projectCreateClick = function() {
+        menu.openProjectClick = function (project) {
+            openProject(project);
+        };
+
+        menu.projectCreateClick = function () {
             let project = projects.createProject();
             menu.data.projects[project.id] = project;
 
+            openProject(project);
+
+        };
+
+        function openProject(project) {
             $state.go("project", {
                 projectId: project.id
             });
+        }
 
-        };
 
         // menu.projectImport = function(e) {
         //     var fileList = e.target.files;
