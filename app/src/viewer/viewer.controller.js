@@ -41,10 +41,16 @@
             graph = new Springy.Graph();
 
             //Fake node so multiple root nodes have a common source
-            let rootNode = projectNode({
-                children: viewer.project.tree,
-                label: 'Fake Render Core Node'
-            });
+
+            let rootNode = viewer.project.tree[0];
+
+            if (viewer.project.tree.length > 1) {
+                rootNode = projectNode({
+                    children: viewer.project.tree,
+                    label: 'Fake Render Core Node',
+                    cloned: true
+                });
+            }
 
             projectNode.traverseNode(rootNode, addGraphNode, rootNode);
         }
