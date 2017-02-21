@@ -1,32 +1,24 @@
 {
   "name": "task_manager",
-  "version": "0.1.427",
+  "version": "0.2.0",
   "author": {
     "name": "David Miller",
-    "email": "david.miller8@mohawkcollege.ca"
+    "email": "davidabc66@gmail.com"
   },
   "private": true,
-  "devDependencies": {
-    "bower": "*",
-    "grunt": "*",
-    "grunt-autoprefixer": "^1.0.1",
-    "grunt-bower-task": "^0.4.0",
-    "grunt-cli": "*",
-    "grunt-concurrent": "^0.5.0",
-    "grunt-contrib-clean": "^0.5.0",
-    "grunt-contrib-concat": "^0.4.0",
-    "grunt-contrib-copy": "^0.5.0",
-    "grunt-contrib-htmlmin": "^0.2.0",
-    "grunt-contrib-jshint": "^0.10.0",
-    "grunt-contrib-uglify": "^0.4.0",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-newer": "^0.7.0",
-    "grunt-sass": "^1.1.0",
-    "grunt-version": "^0.3.1",
-    "jshint-stylish": "^0.4.0",
-    "load-grunt-config": "^0.12.0"
-  },
   "dependencies": {
-    "time-grunt": "^0.3.1"
+    "jscolor": "^0.1.2",
+    "quill": "^1.2.0",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "react-router": "^3.0.2",
+    "react-scripts": "^0.9.0",
+    "springy": "^2.7.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
   }
 }

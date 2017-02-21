@@ -1,0 +1,30 @@
+.menu {
+  background-color: rgba(236, 240, 241, 1.0);
+  /*width: 75%;*/
+  /*position: absolute;*/
+  /*padding-top: 2em;*/
+  /*right: 0;*/
+  /*min-height: 100%;*/
+  /*max-height: 100%;*/
+  /*overflow: hidden;*/
+  header {
+    overflow: hidden;
+    background-color: rgba(189, 195, 199, 1.0);
+    text-align: center;
+  }
+  section {
+    padding: 1em;
+  }
+}
+
+@media only screen and (min-width: 900px) {
+  .menu {
+    /*width: 50%;*/
+  }
+}
+
+@media only screen and (min-width: 1400px) {
+  .menu {
+    /*width: 35%;*/
+  }
+}

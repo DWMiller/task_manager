@@ -42,9 +42,7 @@ Network Trash Folder
 Temporary Items
 .apdisk
 node_modules
-*.sublime-project
-*.sublime-workspace
 /bower_components
 /lib
 /.idea
-/dist
+/build

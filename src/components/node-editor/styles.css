@@ -1,0 +1,40 @@
+#node-editor {
+  /*position: absolute;*/
+  background: rgba(189, 195, 199, 1.0)
+  /*width: 100%;*/
+  /*top: 2em;*/
+  /*left: -100%;*/
+  /*&.active {*/
+  /*left: 0;*/
+  /*}*/
+}
+
+.quill-wrapper {
+  border: 1px solid black;
+  .toolbar, .editor {
+    background-color: white;
+  }
+  .toolbar {
+    border-bottom: 1px solid black;
+  }
+  .editor {
+    min-height: 5em;
+    max-height: 20em;
+  }
+}
+
+@media only screen and (max-width: 899px) {
+  #node-editor {
+    box-shadow: rgba(0, 0, 0, 0.7) 0px 4px 5px 2px;
+    transition: left 0.5s;
+  }
+}
+
+@media only screen and (min-width: 900px) {
+  #node-editor {
+    background: rgba(189, 195, 199, 0.8);
+    transition: left 1s;
+    /*width: 400px;*/
+    /*left: -400px;*/
+  }
+}
